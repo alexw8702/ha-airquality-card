@@ -19,6 +19,17 @@ Ursprünglich als Inline-Dashboard-Ressource entwickelt und mehrfach (pro Raum e
    type: module
    ```
 
+## Entwicklung
+
+Die Karte selbst hat weiterhin keinen Build-Schritt (`dist/airquality-card.js` wird direkt bearbeitet und ausgeliefert). Für die Testsuite gibt es eine einzige Dev-Dependency (`jsdom`), die Tests laufen mit Node's eingebautem Test-Runner:
+
+```bash
+npm install
+npm test
+```
+
+Die Tests laden `dist/airquality-card.js` als echtes `<script>` in eine jsdom-Umgebung (genau wie Home Assistant es über die Lovelace-Ressource tut) und decken ab: die Notenberechnung inkl. WHO-Schwellenwerte, den gleitenden PM2.5-Mittelwert (inkl. Caching/Fallback-Verhalten), die Sensor-Plausibilitätsprüfung, das Rendering (Hinweis-/Fehler-/Hauptkartenpfade, Hell/Dunkel/Glass-Darstellung) sowie die Area-Autofill-Logik des Editors (Geräte-Gruppierung, Schlafzimmer-Erkennung, Schutz vor Überschreiben manueller Eingaben).
+
 ## Verwendung
 
 Die Karte hat einen visuellen Editor: In Lovelace "Karte hinzufügen" → "Luftqualität Karte" auswählen. Zuerst den **Raum (Area)** auswählen – Name und passende Sensoren (per `device_class` erkannt) werden dann automatisch vorbelegt. Name und jeder einzelne Sensor lassen sich danach jederzeit manuell überschreiben; ein späterer Wechsel der Area überschreibt dann nur noch die Felder, die noch nicht manuell angepasst wurden. Kein YAML nötig. Pro Raum eine eigene Karteninstanz. Die Note wird automatisch aus den vier Sensorwerten berechnet – ein separater Helfer wird nicht benötigt.
@@ -103,6 +114,9 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 - [WHO Guidelines for Indoor Air Quality – Dampness and Mould (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK143941/)
 
 ## Changelog
+
+### v0.5.1
+- Testsuite ergänzt (61 Tests, Node's eingebauter Test-Runner + jsdom): Notenberechnung, PM2.5-Mittelwert-Caching, Plausibilitätsprüfung, Rendering (inkl. Theme-/Glass-Darstellung), Area-Autofill. Neue CI-Workflow-Validierung (HACS-Check, Syntax-Check, Tests) analog zum Schwester-Repo `ha-f1-dashboard-card`. Keine funktionale Änderung an der ausgelieferten Karte.
 
 ### v0.5.0
 - Neuer optionaler Glass-Effekt (`glass_effect`, Default `false`): halbtransparente, weichgezeichnete Optik für Karte und Kacheln — passend für Dashboards mit Hintergrundbild. Funktioniert in Hell- und Dunkel-Modus.
