@@ -53,6 +53,38 @@ function validateWeatherEntity(hass, config) {
   return [];
 }
 
+// Zwei feste Farbpaletten statt HA-Theme-Variablen: die Karte wurde ursprünglich für ein
+// bestimmtes dunkles Aussehen auf dem Handy entworfen, "auto" soll sich am Systemzustand
+// (prefers-color-scheme) orientieren statt am aktiven HA-Dashboard-Theme.
+const CARD_PALETTES = {
+  dark: {
+    cardBg: "#12151c",
+    cardShadow: "0 2px 10px rgba(0,0,0,0.4)",
+    title: "#e7e9ee",
+    metricBg: "#1a1f2a",
+    metricHoverBg: "#222839",
+    label: "#8a93a3",
+    value: "#f2f4f7",
+    unit: "#8a93a3",
+    footer: "#5b6472",
+    hintColor: "#8a93a3",
+    problemColor: "#8a93a3"
+  },
+  light: {
+    cardBg: "#f2f3f5",
+    cardShadow: "0 2px 10px rgba(0,0,0,0.10)",
+    title: "#1c1f26",
+    metricBg: "#ffffff",
+    metricHoverBg: "#e9ebef",
+    label: "#6b7280",
+    value: "#1c1f26",
+    unit: "#6b7280",
+    footer: "#9aa1ac",
+    hintColor: "#6b7280",
+    problemColor: "#6b7280"
+  }
+};
+
 class LuftqualitaetCard extends HTMLElement {
   constructor() {
     super();
@@ -62,6 +94,18 @@ class LuftqualitaetCard extends HTMLElement {
     this._paths = null;
     this._visible = false;
     this._reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // "auto"-Theme-Modus: folgt der Geräte-/Browser-Einstellung (prefers-color-scheme),
+    // nicht dem aktiven HA-Dashboard-Theme. Reagiert live auf Änderungen (z.B. Handy wechselt
+    // zwischen Tag/Nacht), solange theme_mode auf "auto" steht.
+    this._colorSchemeMedia = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    this._systemPrefersDark = this._colorSchemeMedia ? this._colorSchemeMedia.matches : true;
+    this._colorSchemeListener = (ev) => {
+      this._systemPrefersDark = ev.matches;
+      if (!this._config || !this._config.theme_mode || this._config.theme_mode === "auto") {
+        this._render();
+      }
+    };
     const rnd = () => Math.random();
     const TP = Math.PI * 2;
     this._r = {
@@ -100,6 +144,7 @@ class LuftqualitaetCard extends HTMLElement {
       temp_target: 21,
       temp_tolerance: 1,
       room_max: 22,
+      theme_mode: "auto",
       ...config
     };
   }
@@ -119,8 +164,17 @@ class LuftqualitaetCard extends HTMLElement {
       weather_entity: "weather.forecast_home",
       temp_target: 21,
       temp_tolerance: 1,
-      room_max: 22
+      room_max: 22,
+      theme_mode: "auto"
     };
+  }
+
+  // "dark" | "light" | "auto" (Default) -> auto folgt der Geräte-/Browser-Einstellung.
+  _isDarkMode() {
+    const mode = this._config && this._config.theme_mode;
+    if (mode === "dark") return true;
+    if (mode === "light") return false;
+    return this._systemPrefersDark;
   }
 
   set hass(hass) {
@@ -141,6 +195,15 @@ class LuftqualitaetCard extends HTMLElement {
       this._lastSig = null;
       this._render();
     }, 60000);
+
+    if (this._colorSchemeMedia) {
+      if (this._colorSchemeMedia.addEventListener) {
+        this._colorSchemeMedia.addEventListener("change", this._colorSchemeListener);
+      } else if (this._colorSchemeMedia.addListener) {
+        // Fallback für ältere WebView-Engines ohne addEventListener auf MediaQueryList
+        this._colorSchemeMedia.addListener(this._colorSchemeListener);
+      }
+    }
 
     // Nur animieren, wenn die Karte tatsaechlich sichtbar ist (Viewport / anderer View / gescrollt)
     if ("IntersectionObserver" in window) {
@@ -166,6 +229,13 @@ class LuftqualitaetCard extends HTMLElement {
     if (this._io) {
       this._io.disconnect();
       this._io = null;
+    }
+    if (this._colorSchemeMedia) {
+      if (this._colorSchemeMedia.removeEventListener) {
+        this._colorSchemeMedia.removeEventListener("change", this._colorSchemeListener);
+      } else if (this._colorSchemeMedia.removeListener) {
+        this._colorSchemeMedia.removeListener(this._colorSchemeListener);
+      }
     }
     this._stopLoop();
   }
@@ -404,13 +474,15 @@ class LuftqualitaetCard extends HTMLElement {
   _render() {
     if (!this._hass || !this._config) return;
 
+    const palette = CARD_PALETTES[this._isDarkMode() ? "dark" : "light"];
+
     const required = ["temp_entity", "humidity_entity", "co2_entity", "pm25_entity"];
     const missing = required.filter((k) => !this._config[k]);
     if (missing.length) {
       this.shadowRoot.innerHTML = `
         <style>
           ha-card { padding:16px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-          .hint { color:var(--secondary-text-color,#8a93a3); font-size:14px; }
+          .hint { color:${palette.hintColor}; font-size:14px; }
         </style>
         <ha-card>
           <div class="hint">Luftqualität Karte: Bitte im Karten-Editor die Sensoren zuweisen (${missing.join(", ")} fehlt).</div>
@@ -428,7 +500,7 @@ class LuftqualitaetCard extends HTMLElement {
         <style>
           ha-card { padding:16px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
           .hint { color:#ef5350; font-size:14px; margin-bottom:6px; }
-          .problem { color:var(--secondary-text-color,#8a93a3); font-size:12px; }
+          .problem { color:${palette.problemColor}; font-size:12px; }
         </style>
         <ha-card>
           <div class="hint">Luftqualität Karte: ungültige Sensor-Zuweisung</div>
@@ -473,14 +545,14 @@ class LuftqualitaetCard extends HTMLElement {
         ha-card {
           display:block;
           zoom:0.9;
-          background:#12151c;
+          background:${palette.cardBg};
           border-radius:20px;
           padding:18px;
           font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-          box-shadow:0 2px 10px rgba(0,0,0,0.4);
+          box-shadow:${palette.cardShadow};
           border:none;
         }
-        .room-title{ text-align:center; color:#e7e9ee; font-size:21px; font-weight:600; margin-bottom:6px; }
+        .room-title{ text-align:center; color:${palette.title}; font-size:21px; font-weight:600; margin-bottom:6px; }
         .grade-wrap{ display:flex; justify-content:center; margin-bottom:18px; padding-top:4px; }
         .grade-outer{
           position:relative; width:206px; height:206px;
@@ -501,21 +573,21 @@ class LuftqualitaetCard extends HTMLElement {
         .metrics{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
         .metric{
           display:flex; align-items:center; gap:10px;
-          background:#1a1f2a; border-radius:14px; padding:12px;
+          background:${palette.metricBg}; border-radius:14px; padding:12px;
           cursor:pointer;
           transition:background 0.15s ease, transform 0.15s ease;
           min-width:0;
         }
-        .metric:hover{ background:#222839; }
+        .metric:hover{ background:${palette.metricHoverBg}; }
         .metric:active{ transform:scale(0.98); }
         .m-icon{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
         .m-icon ha-icon{ --mdc-icon-size:22px; }
         .m-info{ min-width:0; overflow:hidden; }
-        .m-label{ font-size:11px; color:#8a93a3; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .m-value{ font-size:17px; font-weight:700; color:#f2f4f7; white-space:nowrap; }
-        .m-value .unit{ font-size:11px; font-weight:400; color:#8a93a3; margin-left:2px; }
+        .m-label{ font-size:11px; color:${palette.label}; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .m-value{ font-size:17px; font-weight:700; color:${palette.value}; white-space:nowrap; }
+        .m-value .unit{ font-size:11px; font-weight:400; color:${palette.unit}; margin-left:2px; }
         .m-status{ font-size:11px; font-weight:500; margin-top:2px; }
-        .footer{ margin-top:16px; text-align:center; color:#5b6472; font-size:12px; }
+        .footer{ margin-top:16px; text-align:center; color:${palette.footer}; font-size:12px; }
       </style>
       <ha-card>
         <div class="room-title">${roomName}</div>
@@ -661,7 +733,20 @@ class LuftqualitaetCardEditor extends HTMLElement {
           { name: "room_max", selector: { number: { min: 0, max: 40, step: 0.5, mode: "box", unit_of_measurement: "°C" } } }
         ]
       },
-      { name: "grade_entity", selector: { entity: { domain: "sensor" } } }
+      { name: "grade_entity", selector: { entity: { domain: "sensor" } } },
+      {
+        name: "theme_mode",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "auto", label: "Automatisch (Systemeinstellung)" },
+              { value: "light", label: "Hell" },
+              { value: "dark", label: "Dunkel" }
+            ]
+          }
+        }
+      }
     ];
   }
 
@@ -677,7 +762,8 @@ class LuftqualitaetCardEditor extends HTMLElement {
       temp_target: "Ideale Raumtemperatur",
       temp_tolerance: "Toleranz um Idealtemperatur",
       room_max: "Obergrenze für Außentemperatur-Korrektur",
-      grade_entity: "Note-Sensor überschreiben (optional, Legacy)"
+      grade_entity: "Note-Sensor überschreiben (optional, Legacy)",
+      theme_mode: "Darstellung"
     };
     return labels[schemaItem.name] || schemaItem.name;
   }

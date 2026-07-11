@@ -58,8 +58,15 @@ room_max: 22
 | `temp_target` | nein | `21` | Ideale Raumtemperatur (°C) für diesen Raum |
 | `temp_tolerance` | nein | `1` | Toleranzband (°C) um `temp_target`, innerhalb dessen die Temperatur als optimal gilt |
 | `room_max` | nein | `22` | Obergrenze, ab der die Außentemperatur-Korrektur greift |
+| `theme_mode` | nein | `auto` | Darstellung: `auto` (folgt der Geräte-/Browser-Einstellung, live), `light` oder `dark` |
 
 Ein Klick auf die Note (nur bei `grade_entity`) oder eine Metrik öffnet den Home-Assistant-Verlauf des jeweiligen Sensors.
+
+### Darstellung (Hell/Dunkel)
+
+Die Karte wurde ursprünglich für ein dunkles Design entworfen und bringt seit v0.3.0 zusätzlich ein helles Pendant mit. Im Editor unter "Darstellung" wählbar:
+- **Automatisch** (Standard): folgt der Geräte-/Browser-Einstellung (`prefers-color-scheme`), reagiert live auf Änderungen (z. B. wenn das Handy zwischen Tag- und Nachtmodus wechselt).
+- **Hell** / **Dunkel**: fest eingestellt, unabhängig vom System.
 
 ### Plausibilitätsprüfung
 
@@ -74,6 +81,9 @@ Note 1 (sehr gut) bis 5 (schlecht), gewichtet aus CO₂ (30%), PM2.5 (10%), Luft
 Die Default-Werte (`temp_target: 21`, `room_max: 22`) eignen sich für die meisten Wohn-/Arbeitsräume; für Räume mit niedrigerer Zieltemperatur (z. B. Schlafräume) `temp_target`, `temp_tolerance` und `room_max` entsprechend anpassen.
 
 ## Changelog
+
+### v0.3.0
+- Neuer Light Mode (`theme_mode`): `auto` (Standard, folgt live der Geräte-/Browser-Farbschema-Einstellung via `prefers-color-scheme`), `light` oder `dark` fest wählbar im Editor.
 
 ### v0.2.3
 - Detailgrad der animierten Note-Blob-Kontur verdoppelt (44 → 88 Segmente) für einen glatteren Rand, besonders auf schmalen Karten sichtbar.
