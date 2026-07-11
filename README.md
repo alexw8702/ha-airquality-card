@@ -115,6 +115,11 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
+### v0.5.2
+- `info.md` (die HACS-Store-Beschreibung vor der Installation) war seit v0.2.x nicht mehr aktualisiert worden und erwähnte weder Darstellungsmodus/Glass-Effekt noch den PM2.5-Mittelwert — jetzt aktuell.
+- Cache-Refresh-Intervall des PM2.5-Mittelwerts skaliert jetzt mit der Fensterlänge (5–60 Minuten statt fest 5 Minuten) — verhindert, dass ein häufig aktualisierender ("chatty") PM2.5-Sensor bei der Standard-24h-Fensterlänge alle 5 Minuten ein großes History-Payload erneut abfragt.
+- Config-Defaults (`weather_entity`, `temp_target`, `temp_tolerance`, `room_max`, `theme_mode`, `pm25_avg_window`, `glass_effect`) sind jetzt an einer einzigen Stelle definiert statt an drei Stellen dupliziert — keine funktionale Änderung, nur Wartbarkeit.
+
 ### v0.5.1
 - Testsuite ergänzt (61 Tests, Node's eingebauter Test-Runner + jsdom): Notenberechnung, PM2.5-Mittelwert-Caching, Plausibilitätsprüfung, Rendering (inkl. Theme-/Glass-Darstellung), Area-Autofill. Neue CI-Workflow-Validierung (HACS-Check, Syntax-Check, Tests) analog zum Schwester-Repo `ha-f1-dashboard-card`. Keine funktionale Änderung an der ausgelieferten Karte.
 

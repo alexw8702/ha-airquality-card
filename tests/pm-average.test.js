@@ -115,3 +115,27 @@ describe("_ensurePmAverage / _pmAverageOrCurrent (gleitender 24h-Mittelwert, sie
     assert.equal(card._pmAverageOrCurrent("sensor.pm25"), 12);
   });
 });
+
+describe("_pmAvgRefreshIntervalMs (Cache-Refresh skaliert mit Fensterlänge)", () => {
+  test("kurze Fenster bleiben nahe am bisherigen 5-Minuten-Minimum", () => {
+    const card = newCardWith(baseConfig(), makeHass({}));
+    assert.equal(card._pmAvgRefreshIntervalMs(5), 5 * 60000); // Untergrenze greift
+    assert.equal(card._pmAvgRefreshIntervalMs(60), 6 * 60000); // 10% von 60min
+  });
+
+  test("lange Fenster (Default 1440min/24h) werden auf die 60-Minuten-Obergrenze gedeckelt", () => {
+    // Ohne Deckel wären das 144 Minuten - der Punkt dieser Funktion ist, chatty Sensoren
+    // (Update alle paar Sekunden) nicht alle 5 Minuten ein großes 24h-History-Payload
+    // erneut abfragen zu lassen (siehe Kommentar an der Implementierung).
+    const card = newCardWith(baseConfig(), makeHass({}));
+    assert.equal(card._pmAvgRefreshIntervalMs(1440), 60 * 60000);
+  });
+
+  test("liegt immer zwischen der 5- und 60-Minuten-Grenze, unabhängig vom Fenster", () => {
+    const card = newCardWith(baseConfig(), makeHass({}));
+    for (const windowMinutes of [1, 5, 30, 60, 120, 500, 1440]) {
+      const ms = card._pmAvgRefreshIntervalMs(windowMinutes);
+      assert.ok(ms >= 5 * 60000 && ms <= 60 * 60000, `windowMinutes=${windowMinutes} ergab ${ms}ms`);
+    }
+  });
+});

@@ -1,3 +1,16 @@
+// Einzige Quelle für alle optionalen Config-Defaults - wird von setConfig(), getStubConfig()
+// und dem internen Fallback in _ensurePmAverage() gemeinsam genutzt, damit die drei Stellen
+// nicht mehr unabhängig voneinander gepflegt werden müssen (vorher drei duplizierte Literale).
+const DEFAULT_CONFIG = {
+  weather_entity: "weather.forecast_home",
+  temp_target: 21,
+  temp_tolerance: 1,
+  room_max: 22,
+  theme_mode: "auto",
+  pm25_avg_window: 1440,
+  glass_effect: false
+};
+
 // Plausibilitätsprüfung für zugewiesene Sensoren: die Notenberechnung setzt physikalisch
 // sinnvolle Werte in der jeweils erwarteten Einheit voraus (z.B. ppm für CO2). Ein falsch
 // zugewiesener Sensor (z.B. Temperatur statt CO2) würde sonst eine unsinnige Note erzeugen,
@@ -167,16 +180,7 @@ class LuftqualitaetCard extends HTMLElement {
     // Bewusst tolerant: die Karte wird über den visuellen Editor (getConfigElement)
     // konfiguriert, dabei ist eine Zwischenphase mit leeren Entity-Feldern normal.
     // _render() zeigt in diesem Fall einen Hinweis statt zu crashen.
-    this._config = {
-      weather_entity: "weather.forecast_home",
-      temp_target: 21,
-      temp_tolerance: 1,
-      room_max: 22,
-      theme_mode: "auto",
-      pm25_avg_window: 1440,
-      glass_effect: false,
-      ...config
-    };
+    this._config = { ...DEFAULT_CONFIG, ...config };
   }
 
   static getConfigElement() {
@@ -191,13 +195,7 @@ class LuftqualitaetCard extends HTMLElement {
       humidity_entity: "",
       co2_entity: "",
       pm25_entity: "",
-      weather_entity: "weather.forecast_home",
-      temp_target: 21,
-      temp_tolerance: 1,
-      room_max: 22,
-      theme_mode: "auto",
-      pm25_avg_window: 1440,
-      glass_effect: false
+      ...DEFAULT_CONFIG
     };
   }
 
@@ -435,15 +433,15 @@ class LuftqualitaetCard extends HTMLElement {
   // explizit als 24h-Mittelwert definiert (siehe README/Quellen), daher ist 1440 Minuten
   // (24h) der Default für pm25_avg_window - kurzfristige Spitzen (Kochen, Kerzen) sollen
   // die Note nicht dominieren. Holt die letzten `pm25_avg_window` Minuten über die
-  // HA History-API und cached das Ergebnis für 5 Minuten, um nicht bei jedem Render
-  // (Sensor-Update alle paar Sekunden möglich) neu zu laden. Läuft asynchron und stößt bei
-  // Ankunft neuer Daten ein Re-Render an; bis dahin (und bei Fehlern) fällt _computeGrade()
-  // auf den Momentanwert zurück, damit die Karte sofort nutzbar bleibt.
+  // HA History-API und cached das Ergebnis (siehe _pmAvgRefreshIntervalMs), um nicht bei
+  // jedem Render (Sensor-Update alle paar Sekunden möglich) neu zu laden. Läuft asynchron
+  // und stößt bei Ankunft neuer Daten ein Re-Render an; bis dahin (und bei Fehlern) fällt
+  // _computeGrade() auf den Momentanwert zurück, damit die Karte sofort nutzbar bleibt.
   _ensurePmAverage() {
     const entityId = this._config.pm25_entity;
     const windowMinutes = Number.isFinite(this._config.pm25_avg_window) && this._config.pm25_avg_window > 0
       ? this._config.pm25_avg_window
-      : 1440;
+      : DEFAULT_CONFIG.pm25_avg_window;
     if (!entityId || !this._hass || typeof this._hass.callApi !== "function") return;
 
     const cache = this._pmAvg;
@@ -460,7 +458,7 @@ class LuftqualitaetCard extends HTMLElement {
       const series = (result && result[0]) || [];
       const values = series.map((s) => parseFloat(s.state)).filter((v) => Number.isFinite(v));
       const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
-      this._pmAvg = { entityId, windowMinutes, value: avg, refreshAt: Date.now() + 5 * 60000 };
+      this._pmAvg = { entityId, windowMinutes, value: avg, refreshAt: Date.now() + this._pmAvgRefreshIntervalMs(windowMinutes) };
       this._pmAvgFetching = false;
       this._render();
     }).catch(() => {
@@ -476,6 +474,18 @@ class LuftqualitaetCard extends HTMLElement {
     const cache = this._pmAvg;
     if (cache && cache.entityId === entityId && cache.value !== null) return cache.value;
     return this._numOr0(entityId);
+  }
+
+  // Skaliert das Cache-Refresh-Intervall mit der Fensterlänge, statt fest 5 Minuten zu
+  // nutzen: ein 24h-Fenster (Default) ändert sich naturgemäß langsam, ein Neu-Fetch alle
+  // 5 Minuten wäre unnötig häufig und bei einem "chatty" Sensor (Update alle paar Sekunden)
+  // ein potenziell großes history/period-Payload zwölfmal pro Stunde statt einmal. 10% der
+  // Fensterlänge, deckelt zwischen 5 und 60 Minuten - kurze Fenster bleiben reaktionsschnell
+  // (z.B. 60min-Fenster -> 6min Refresh), lange Fenster werden spürbar seltener neu geladen
+  // (1440min-Fenster -> 60min Refresh statt 5min, ca. 12x weniger History-Abfragen).
+  _pmAvgRefreshIntervalMs(windowMinutes) {
+    const scaled = windowMinutes * 0.1;
+    return Math.max(5, Math.min(scaled, 60)) * 60000;
   }
 
   _computeGrade() {
@@ -743,7 +753,7 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="m-status" style="color:${hStat.color}">${hStat.text}</div>
             </div>
           </div>
-          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : 1440}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
+          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
             <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
               <ha-icon icon="mdi:dots-grid"></ha-icon>
             </div>
