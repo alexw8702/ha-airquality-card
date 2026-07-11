@@ -126,4 +126,27 @@ describe("_render: Darstellung (theme_mode / glass_effect)", () => {
     const lightCss = lightGlass.shadowRoot.querySelector("style").textContent;
     assert.notEqual(darkCss, lightCss);
   });
+
+  // Regressionstest: setConfig() muss unabhängig vom hass-Setter neu rendern. Lovelace
+  // ruft setConfig() bei jeder Editor-Änderung auf, setzt `hass` danach aber nur dann
+  // erneut, wenn sich das globale hass-Objekt ohnehin ändert - der hass-Setter selbst
+  // rendert wiederum nur bei geänderter Sensor-Signatur neu (siehe dort). Ohne einen
+  // eigenständigen _render()-Aufruf in setConfig() blieben reine Config-Änderungen
+  // (theme_mode, glass_effect, pm25_avg_window, temp_target, ...) unsichtbar, bis
+  // zufällig ein beobachteter Sensor aktualisiert.
+  test("setConfig() rendert eigenständig neu, auch ohne dass hass danach erneut gesetzt wird", () => {
+    const hass = makeHass(goodRoomStates());
+    const card = mountCard(baseConfig({ theme_mode: "dark" }), hass);
+    assert.match(card.shadowRoot.querySelector("style").textContent, /#12151c/);
+
+    card.setConfig(baseConfig({ theme_mode: "light" })); // hass wird bewusst NICHT erneut gesetzt
+
+    assert.match(card.shadowRoot.querySelector("style").textContent, /#f2f3f5/);
+  });
+
+  test("setConfig() vor dem ersten hass-Aufruf crasht nicht (noch kein shadowRoot-Inhalt nötig)", () => {
+    const { document } = createCardDom();
+    const card = document.createElement("luftqualitaet-card");
+    assert.doesNotThrow(() => card.setConfig(baseConfig()));
+  });
 });

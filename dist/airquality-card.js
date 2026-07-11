@@ -181,6 +181,14 @@ class LuftqualitaetCard extends HTMLElement {
     // konfiguriert, dabei ist eine Zwischenphase mit leeren Entity-Feldern normal.
     // _render() zeigt in diesem Fall einen Hinweis statt zu crashen.
     this._config = { ...DEFAULT_CONFIG, ...config };
+    // Lovelace ruft setConfig() bei jeder Config-Änderung auf, aber NICHT zuverlässig
+    // erneut den hass-Setter direkt danach (nur wenn sich das globale hass-Objekt
+    // ohnehin ändert). Der hass-Setter rendert nur bei geänderter Sensor-Signatur neu -
+    // Config-only-Änderungen wie theme_mode/glass_effect/pm25_avg_window/temp_target
+    // würden also unsichtbar bleiben, bis zufällig ein beobachteter Sensor aktualisiert.
+    // Direkter _render()-Aufruf hier schließt diese Lücke; er ist ein No-Op, solange
+    // this._hass noch nicht gesetzt ist (siehe Guard am Anfang von _render()).
+    this._render();
   }
 
   static getConfigElement() {

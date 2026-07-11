@@ -115,6 +115,9 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
+### v0.5.4
+- 🐛 **Bugfix:** `setConfig()` löste kein Neu-Rendern aus, sondern verließ sich vollständig auf den `hass`-Setter. Lovelace ruft `setConfig()` bei jeder Editor-Änderung auf, setzt `hass` danach aber nicht zuverlässig erneut — und der `hass`-Setter selbst rendert nur bei geänderter Sensor-Signatur neu. Reine Config-Änderungen im visuellen Editor (Darstellungsmodus, Glass-Effekt, PM2.5-Mittelungsfenster, Zieltemperatur, …) blieben dadurch unsichtbar, bis zufällig ein beobachteter Sensor aktualisierte. `setConfig()` rendert jetzt eigenständig neu. 2 neue Regressionstests (73 gesamt).
+
 ### v0.5.3
 - Testsuite um die bisher ungetestete Editor-Eviction-Logik ergänzt (`value-changed`-Handler, `_autofilledKeys`-State-Machine) — laut Repo-Review der Punkt mit dem höchsten Regressionsrisiko im Repo. 7 neue Tests (71 gesamt), keine funktionale Änderung.
 
