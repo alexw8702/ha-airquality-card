@@ -178,3 +178,149 @@ describe("_applyAreaAutofill (nicht-destruktives Vorbefüllen)", () => {
     assert.equal(config.temp_target, 19.5);
   });
 });
+
+// Zwei komplette, unterschiedliche Räume (jeweils ein Gerät mit allen vier Sensortypen),
+// damit ein Area-Wechsel im Editor realistisch getestet werden kann.
+function twoRoomHass() {
+  const room1 = fullDeviceHass("wohnzimmer", "device-1", "womi");
+  const room2 = fullDeviceHass("schlafzimmer", "device-2", "sz");
+  return makeHass(
+    { ...room1.states, ...room2.states },
+    {
+      entities: { ...room1.entities, ...room2.entities },
+      devices: { ...room1.devices, ...room2.devices },
+      areas: {
+        wohnzimmer: { name: "Wohnzimmer" },
+        schlafzimmer: { name: "Schlafzimmer" },
+      },
+    }
+  );
+}
+
+// Mountet den Editor über den echten setConfig()/hass-Setter-Pfad, damit _render() den
+// ha-form-Mock erzeugt und den value-changed-Listener anhängt - im Unterschied zu den
+// Tests oben, die die internen Methoden direkt aufrufen, testet dies den tatsächlichen
+// Event-Handler-Codepfad (siehe CLAUDE.md: das war die zuletzt unbedeckte Stelle).
+function mountEditor(config, hass) {
+  const { window, document } = createCardDom();
+  const editor = document.createElement("luftqualitaet-card-editor");
+  editor.setConfig(config);
+  editor.hass = hass; // triggert _render(), das _form + Listener anlegt
+  return { editor, window };
+}
+
+function dispatchValueChanged(editor, window, value) {
+  editor._form.dispatchEvent(new window.CustomEvent("value-changed", { detail: { value } }));
+}
+
+describe("value-changed-Handler (Eviction-State-Machine, siehe _autofilledKeys)", () => {
+  test("erzeugt beim Mounten ein _form-Element mit angehängtem value-changed-Listener", () => {
+    const { editor } = mountEditor(baseConfig(), makeHass({}));
+    assert.ok(editor._form, "_form wurde nicht erzeugt");
+    assert.equal(editor._form.tagName.toLowerCase(), "ha-form");
+  });
+
+  test("manuelle Bearbeitung eines Felds ohne Area-Bezug wird 1:1 übernommen und als config-changed gemeldet", () => {
+    const { editor, window } = mountEditor(baseConfig({ name: "Alt" }), makeHass({}));
+    let receivedDetail = null;
+    editor.addEventListener("config-changed", (ev) => { receivedDetail = ev.detail; });
+
+    dispatchValueChanged(editor, window, { ...baseConfig(), name: "Neu" });
+
+    assert.equal(editor._config.name, "Neu");
+    assert.ok(receivedDetail, "config-changed wurde nicht ausgelöst");
+    assert.equal(receivedDetail.config.name, "Neu");
+  });
+
+  test("config-changed-Event bubbelt und ist composed (verlässt den Editor-Scope)", () => {
+    const { editor, window } = mountEditor(baseConfig(), makeHass({}));
+    let event = null;
+    editor.addEventListener("config-changed", (ev) => { event = ev; });
+
+    dispatchValueChanged(editor, window, { ...baseConfig(), name: "X" });
+
+    assert.equal(event.bubbles, true);
+    assert.equal(event.composed, true);
+  });
+
+  test("Area-Auswahl befüllt leere Felder automatisch und merkt sie als autofilled", () => {
+    const hass = twoRoomHass();
+    const emptyConfig = {
+      name: "", temp_entity: "", humidity_entity: "", co2_entity: "", pm25_entity: "",
+      temp_target: 21, area_id: "",
+    };
+    const { editor, window } = mountEditor(emptyConfig, hass);
+
+    dispatchValueChanged(editor, window, { ...emptyConfig, area_id: "wohnzimmer" });
+
+    assert.equal(editor._config.name, "Wohnzimmer");
+    assert.equal(editor._config.temp_entity, "sensor.womi_temp");
+    assert.ok(editor._autofilledKeys.has("temp_entity"));
+    assert.ok(editor._autofilledKeys.has("name"));
+  });
+
+  test("manuelle Bearbeitung eines automatisch befüllten Felds entfernt es aus dem Autofill-Tracking", () => {
+    const hass = twoRoomHass();
+    const emptyConfig = {
+      name: "", temp_entity: "", humidity_entity: "", co2_entity: "", pm25_entity: "",
+      temp_target: 21, area_id: "",
+    };
+    const { editor, window } = mountEditor(emptyConfig, hass);
+
+    // 1) Area waehlen -> alle vier Sensorfelder + Name werden automatisch befuellt.
+    dispatchValueChanged(editor, window, { ...emptyConfig, area_id: "wohnzimmer" });
+    assert.ok(editor._autofilledKeys.has("temp_entity"));
+
+    // 2) Nutzer aendert temp_entity manuell auf einen anderen Sensor (nicht den, den
+    // die Area geliefert haette) - das darf das Tracking fuer dieses Feld beenden.
+    const afterAreaSelect = { ...editor._config };
+    dispatchValueChanged(editor, window, { ...afterAreaSelect, temp_entity: "sensor.manuell_gewaehlt" });
+
+    assert.equal(editor._config.temp_entity, "sensor.manuell_gewaehlt");
+    assert.ok(!editor._autofilledKeys.has("temp_entity"), "temp_entity haette aus dem Tracking entfernt werden muessen");
+    assert.ok(editor._autofilledKeys.has("humidity_entity"), "andere Felder bleiben weiterhin automatisch verwaltet");
+  });
+
+  test("ein späterer Area-Wechsel überschreibt nur noch weiterhin automatisch verwaltete Felder", () => {
+    const hass = twoRoomHass();
+    const emptyConfig = {
+      name: "", temp_entity: "", humidity_entity: "", co2_entity: "", pm25_entity: "",
+      temp_target: 21, area_id: "",
+    };
+    const { editor, window } = mountEditor(emptyConfig, hass);
+
+    // Wohnzimmer waehlen, dann temp_entity manuell ueberschreiben (siehe Test oben).
+    dispatchValueChanged(editor, window, { ...emptyConfig, area_id: "wohnzimmer" });
+    dispatchValueChanged(editor, window, { ...editor._config, temp_entity: "sensor.manuell_gewaehlt" });
+    assert.equal(editor._config.temp_entity, "sensor.manuell_gewaehlt");
+
+    // Jetzt auf Schlafzimmer wechseln: die manuell gesetzte temp_entity darf NICHT
+    // überschrieben werden, humidity_entity (weiterhin autofilled) hingegen schon.
+    dispatchValueChanged(editor, window, { ...editor._config, area_id: "schlafzimmer" });
+
+    assert.equal(editor._config.temp_entity, "sensor.manuell_gewaehlt", "manuelle Auswahl darf nicht ueberschrieben werden");
+    assert.equal(editor._config.humidity_entity, "sensor.sz_hum", "weiterhin autofilled -> wird auf den neuen Raum aktualisiert");
+    assert.equal(editor._config.name, "Schlafzimmer");
+  });
+
+  test("_renderWarnings wird nach jedem value-changed neu ausgewertet", () => {
+    const hass = makeHass({
+      "sensor.temp": makeState(21, { device_class: "temperature" }),
+      "sensor.hum": makeState(50, { device_class: "humidity" }),
+      "sensor.co2": makeState(420, { device_class: "carbon_dioxide" }),
+      "sensor.pm25": makeState(1, { device_class: "pm25" }),
+      // Für den fehlerhaften Zustand: ein CO2-Sensor, faelschlich als Temperatur zugewiesen.
+      "sensor.wrong": makeState(420, { device_class: "carbon_dioxide" }),
+    });
+    const validConfig = baseConfig({
+      temp_entity: "sensor.temp", humidity_entity: "sensor.hum",
+      co2_entity: "sensor.co2", pm25_entity: "sensor.pm25",
+    });
+    const { editor, window } = mountEditor(validConfig, hass);
+    assert.equal(editor._warningsEl.innerHTML, "", "vor der fehlerhaften Zuweisung sollten keine Warnungen stehen");
+
+    dispatchValueChanged(editor, window, { ...validConfig, temp_entity: "sensor.wrong" });
+
+    assert.match(editor._warningsEl.innerHTML, /Temperatursensor/);
+  });
+});

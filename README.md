@@ -115,6 +115,9 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
+### v0.5.3
+- Testsuite um die bisher ungetestete Editor-Eviction-Logik ergänzt (`value-changed`-Handler, `_autofilledKeys`-State-Machine) — laut Repo-Review der Punkt mit dem höchsten Regressionsrisiko im Repo. 7 neue Tests (71 gesamt), keine funktionale Änderung.
+
 ### v0.5.2
 - `info.md` (die HACS-Store-Beschreibung vor der Installation) war seit v0.2.x nicht mehr aktualisiert worden und erwähnte weder Darstellungsmodus/Glass-Effekt noch den PM2.5-Mittelwert — jetzt aktuell.
 - Cache-Refresh-Intervall des PM2.5-Mittelwerts skaliert jetzt mit der Fensterlänge (5–60 Minuten statt fest 5 Minuten) — verhindert, dass ein häufig aktualisierender ("chatty") PM2.5-Sensor bei der Standard-24h-Fensterlänge alle 5 Minuten ein großes History-Payload erneut abfragt.
