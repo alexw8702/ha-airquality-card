@@ -336,10 +336,11 @@ class LuftqualitaetCard extends HTMLElement {
   }
 
   // Schwellen nach WHO Global Air Quality Guidelines 2021 (Jahresmittel 5 µg/m³,
-  // 24h-Mittel 15 µg/m³ - siehe README/Quellen). Bezieht sich auf den aktuellen
-  // Momentanwert der Kachel; die Notenberechnung selbst nutzt einen gleitenden
-  // Mittelwert (_pmNorm/_ensurePmAverage), daher können Kachel-Status und Note kurzzeitig
-  // auseinanderlaufen (z.B. beim Kochen: Kachel "Schlecht", Note reagiert gedämpfter).
+  // 24h-Mittel 15 µg/m³ - siehe README/Quellen). v ist beim Aufruf für die PM2.5-Kachel
+  // bereits der gleitende Mittelwert (siehe _render: this._pmAverageOrCurrent(...)), NICHT
+  // der Momentanwert - sonst würde eine kurze Spitze (Kochen etc.) die Kachel "Schlecht"
+  // färben, obwohl der WHO-relevante 24h-Trend besser ist. Nur die angezeigte Zahl bleibt
+  // der Momentanwert.
   _pm25Status(v) {
     if (v === null) return { text: "–", color: "#8a93a3" };
     if (v <= 5) return { text: "Gut", color: "#ba68c8" };
@@ -592,7 +593,11 @@ class LuftqualitaetCard extends HTMLElement {
     const tStat = this._tempStatus(temp);
     const cStat = this._co2Status(co2);
     const hStat = this._humidityStatus(hum);
-    const pStat = this._pm25Status(pm25);
+    // Status/Farbe folgen dem 24h-Mittelwert (wie die Note), nicht dem Momentanwert:
+    // sonst würde eine kurze Spitze (Kochen etc.) die Kachel "Schlecht" färben, obwohl
+    // der WHO-relevante 24h-Trend "Mäßig" oder besser ist - genau der Widerspruch, den
+    // die Mittelwert-Note eigentlich auflösen soll. Die Zahl selbst bleibt der Momentanwert.
+    const pStat = this._pm25Status(this._pmAverageOrCurrent(this._config.pm25_entity));
 
     const roomName = this._config.name || "Raum";
     const agoText = this._agoText(this._config.grade_entity || this._config.temp_entity);
@@ -701,7 +706,7 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="m-status" style="color:${hStat.color}">${hStat.text}</div>
             </div>
           </div>
-          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Note nutzt einen ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : 1440}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert), diese Kachel zeigt den aktuellen Momentanwert.">
+          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : 1440}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
             <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
               <ha-icon icon="mdi:dots-grid"></ha-icon>
             </div>
