@@ -145,7 +145,7 @@ class LuftqualitaetCard extends HTMLElement {
       temp_tolerance: 1,
       room_max: 22,
       theme_mode: "auto",
-      pm25_avg_window: 60,
+      pm25_avg_window: 1440,
       ...config
     };
   }
@@ -167,7 +167,7 @@ class LuftqualitaetCard extends HTMLElement {
       temp_tolerance: 1,
       room_max: 22,
       theme_mode: "auto",
-      pm25_avg_window: 60
+      pm25_avg_window: 1440
     };
   }
 
@@ -400,9 +400,10 @@ class LuftqualitaetCard extends HTMLElement {
     return Number.isNaN(v) ? 0 : v;
   }
 
-  // Gleitender Mittelwert für PM2.5 statt Momentanwert: WHO-Guidelines sind selbst
-  // Zeit-Mittelwerte (Jahr/24h), kurzfristige Spitzen (Kochen, Kerzen) sind normal und
-  // sollen die Note nicht dominieren. Holt die letzten `pm25_avg_window` Minuten über die
+  // Gleitender 24h-Mittelwert für PM2.5 statt Momentanwert: die WHO-Guidelines sind
+  // explizit als 24h-Mittelwert definiert (siehe README/Quellen), daher ist 1440 Minuten
+  // (24h) der Default für pm25_avg_window - kurzfristige Spitzen (Kochen, Kerzen) sollen
+  // die Note nicht dominieren. Holt die letzten `pm25_avg_window` Minuten über die
   // HA History-API und cached das Ergebnis für 5 Minuten, um nicht bei jedem Render
   // (Sensor-Update alle paar Sekunden möglich) neu zu laden. Läuft asynchron und stößt bei
   // Ankunft neuer Daten ein Re-Render an; bis dahin (und bei Fehlern) fällt _computeGrade()
@@ -411,7 +412,7 @@ class LuftqualitaetCard extends HTMLElement {
     const entityId = this._config.pm25_entity;
     const windowMinutes = Number.isFinite(this._config.pm25_avg_window) && this._config.pm25_avg_window > 0
       ? this._config.pm25_avg_window
-      : 60;
+      : 1440;
     if (!entityId || !this._hass || typeof this._hass.callApi !== "function") return;
 
     const cache = this._pmAvg;
@@ -700,7 +701,7 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="m-status" style="color:${hStat.color}">${hStat.text}</div>
             </div>
           </div>
-          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Note nutzt einen ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : 60}-Minuten-Mittelwert (WHO-Richtwerte sind Zeit-Mittelwerte), diese Kachel zeigt den aktuellen Momentanwert.">
+          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Note nutzt einen ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : 1440}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert), diese Kachel zeigt den aktuellen Momentanwert.">
             <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
               <ha-icon icon="mdi:dots-grid"></ha-icon>
             </div>
