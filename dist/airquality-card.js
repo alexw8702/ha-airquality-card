@@ -686,17 +686,26 @@ class LuftqualitaetCardEditor extends HTMLElement {
   // AIR_QUALITY_ENTITY_RULES) über die Entity-Registry (hass.entities) inkl. Fallback auf
   // die Area des zugehörigen Geräts (hass.devices), falls die Entität selbst keine eigene
   // Area-Zuweisung hat.
+  //
+  // Enthält ein Raum mehrere Sensoren desselben Typs (z.B. zwei CO2-Sensoren von zwei
+  // unterschiedlichen Multisensor-Geräten), wäre ein beliebiger Treffer pro Typ mehrdeutig
+  // und könnte Sensoren unterschiedlicher physischer Geräte mischen. Autofill greift daher
+  // nur, wenn genau ein Gerät im Raum ALLE vier Sensortypen liefert - dessen Entitäten werden
+  // dann komplett übernommen. Gibt es kein solches Gerät, bleiben alle vier Felder leer statt
+  // eine unsichere Einzelauswahl zu treffen.
   _findAreaEntityMatches(areaId) {
-    const hass = this._hass;
+    const requiredKeys = Object.keys(AIR_QUALITY_ENTITY_RULES);
     const matches = { temp_entity: null, humidity_entity: null, co2_entity: null, pm25_entity: null };
+    const hass = this._hass;
     if (!areaId || !hass || !hass.entities || !hass.states) return matches;
 
+    const byDevice = new Map();
     for (const entityId of Object.keys(hass.entities)) {
       if (entityId.split(".")[0] !== "sensor") continue;
       const entry = hass.entities[entityId];
-      if (!entry) continue;
+      if (!entry || !entry.device_id) continue; // Gerätezuordnung ist für diese Prüfung erforderlich
       let entityArea = entry.area_id;
-      if (!entityArea && entry.device_id && hass.devices && hass.devices[entry.device_id]) {
+      if (!entityArea && hass.devices && hass.devices[entry.device_id]) {
         entityArea = hass.devices[entry.device_id].area_id;
       }
       if (entityArea !== areaId) continue;
@@ -705,13 +714,22 @@ class LuftqualitaetCardEditor extends HTMLElement {
       const deviceClass = st && st.attributes && st.attributes.device_class;
       if (!deviceClass) continue;
 
-      for (const key of Object.keys(AIR_QUALITY_ENTITY_RULES)) {
-        if (matches[key]) continue;
-        if (AIR_QUALITY_ENTITY_RULES[key].deviceClasses.includes(deviceClass)) {
-          matches[key] = entityId;
-        }
+      for (const key of requiredKeys) {
+        if (!AIR_QUALITY_ENTITY_RULES[key].deviceClasses.includes(deviceClass)) continue;
+        if (!byDevice.has(entry.device_id)) byDevice.set(entry.device_id, {});
+        const deviceMatches = byDevice.get(entry.device_id);
+        if (!deviceMatches[key]) deviceMatches[key] = entityId; // erster Treffer je Typ und Gerät
       }
     }
+
+    const completeDeviceIds = [...byDevice.keys()]
+      .filter((deviceId) => requiredKeys.every((key) => byDevice.get(deviceId)[key]))
+      .sort();
+    if (completeDeviceIds.length > 0) {
+      const deviceMatches = byDevice.get(completeDeviceIds[0]);
+      for (const key of requiredKeys) matches[key] = deviceMatches[key];
+    }
+
     return matches;
   }
 
@@ -793,9 +811,9 @@ class LuftqualitaetCardEditor extends HTMLElement {
 
     if (this._config && this._config.area_id) {
       const matches = this._findAreaEntityMatches(this._config.area_id);
-      const missingInArea = Object.keys(matches).filter((k) => !matches[k]);
-      if (missingInArea.length === Object.keys(matches).length) {
-        problems.push("Gewählter Raum: keine passenden Sensoren gefunden (device_class fehlt vermutlich) - bitte Sensoren manuell zuweisen.");
+      const noneMatched = Object.values(matches).every((v) => !v);
+      if (noneMatched) {
+        problems.push("Gewählter Raum: kein Gerät gefunden, das alle vier Sensortypen liefert (device_class fehlt vermutlich, oder die Sensoren gehören zu unterschiedlichen Geräten) - bitte Sensoren manuell zuweisen.");
       }
     }
 
