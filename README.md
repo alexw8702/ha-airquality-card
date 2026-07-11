@@ -21,9 +21,9 @@ Ursprünglich als Inline-Dashboard-Ressource entwickelt und mehrfach (pro Raum e
 
 ## Verwendung
 
-Die Karte hat einen visuellen Editor: In Lovelace "Karte hinzufügen" → "Luftqualität Karte" auswählen und die eigenen Sensoren per Dropdown zuweisen. Kein YAML nötig. Pro Raum eine eigene Karteninstanz. Die Note wird automatisch aus den vier Sensorwerten berechnet – ein separater Helfer wird nicht benötigt.
+Die Karte hat einen visuellen Editor: In Lovelace "Karte hinzufügen" → "Luftqualität Karte" auswählen. Zuerst den **Raum (Area)** auswählen – Name und passende Sensoren (per `device_class` erkannt) werden dann automatisch vorbelegt. Name und jeder einzelne Sensor lassen sich danach jederzeit manuell überschreiben; ein späterer Wechsel der Area überschreibt dann nur noch die Felder, die noch nicht manuell angepasst wurden. Kein YAML nötig. Pro Raum eine eigene Karteninstanz. Die Note wird automatisch aus den vier Sensorwerten berechnet – ein separater Helfer wird nicht benötigt.
 
-Solange nicht alle Pflichtfelder gesetzt sind, zeigt die Karte einen Hinweis statt eines Fehlers an.
+Solange nicht alle Pflichtfelder gesetzt sind, zeigt die Karte einen Hinweis statt eines Fehlers an. Enthält der gewählte Raum keine passenden Sensoren (z. B. weil sie keine `device_class` gesetzt haben), erscheint dazu eine Warnung im Editor.
 
 Alternativ per YAML:
 
@@ -45,6 +45,7 @@ room_max: 22
 
 | Option | Pflicht | Default | Beschreibung |
 |---|---|---|---|
+| `area_id` | nein | – | Home-Assistant-Raum; befüllt `name` und die Sensor-Felder automatisch vor (nur nicht bereits manuell gesetzte Felder) |
 | `name` | nein | "Raum" | Anzeigename des Raums |
 | `temp_entity` | ja | – | Temperatursensor |
 | `humidity_entity` | ja | – | Luftfeuchtigkeitssensor |
@@ -71,6 +72,9 @@ Note 1 (sehr gut) bis 5 (schlecht), gewichtet aus CO₂ (30%), PM2.5 (10%), Luft
 Die Default-Werte (`temp_target: 21`, `room_max: 22`) eignen sich für die meisten Wohn-/Arbeitsräume; für Räume mit niedrigerer Zieltemperatur (z. B. Schlafräume) `temp_target`, `temp_tolerance` und `room_max` entsprechend anpassen.
 
 ## Changelog
+
+### v0.2.1
+- Area-Auswahl im Editor (`area_id`): befüllt Name und die vier Sensor-Felder automatisch anhand der `device_class` der Sensoren im gewählten Raum vor. Bereits manuell gesetzte Felder werden dabei nicht überschrieben; Name und Sensoren bleiben jederzeit frei überschreibbar. Benötigt HA ≥ 2024.8 (`hass.entities`/`hass.areas`), `hacs.json`-Mindestversion entsprechend angehoben.
 
 ### v0.2.0 (erstes Release)
 - Erste eigenständige HACS-Version, portiert aus dem bestehenden Luftqualitäts-Dashboard (bisher nur als Inline-Dashboard-Ressource gepflegt) — Entwicklungsstufe 2.

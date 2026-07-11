@@ -110,6 +110,7 @@ class LuftqualitaetCard extends HTMLElement {
 
   static getStubConfig() {
     return {
+      area_id: "",
       name: "",
       temp_entity: "",
       humidity_entity: "",
@@ -613,9 +614,21 @@ window.customCards.push({
   description: "Zeigt Note, Temperatur, Luftfeuchtigkeit, CO2 und PM2.5 eines Raums an."
 });
 
+// Felder, die per Area-Auswahl automatisch vorbelegt werden können. Ein Feld bleibt nur
+// dann "automatisch verwaltet", solange der Nutzer es nicht manuell überschrieben hat -
+// siehe _AUTOFILL_KEYS-Tracking in value-changed.
+const AREA_AUTOFILL_KEYS = ["name", "temp_entity", "humidity_entity", "co2_entity", "pm25_entity"];
+
 // Visueller Karten-Editor: nutzt das in HA eingebaute <ha-form> mit einem Selector-Schema,
 // damit Nutzer ihre eigenen Entitäten per Dropdown auswählen können (kein YAML nötig).
 class LuftqualitaetCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    // Felder, deren aktueller Wert automatisch aus der Area-Auswahl stammt (noch nicht
+    // manuell überschrieben). Nur diese werden bei einem Area-Wechsel neu belegt.
+    this._autofilledKeys = new Set();
+  }
+
   setConfig(config) {
     this._config = config;
     this._render();
@@ -632,6 +645,7 @@ class LuftqualitaetCardEditor extends HTMLElement {
 
   get _schema() {
     return [
+      { name: "area_id", selector: { area: {} } },
       { name: "name", selector: { text: {} } },
       { name: "temp_entity", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
       { name: "humidity_entity", selector: { entity: { domain: "sensor", device_class: "humidity" } } },
@@ -653,6 +667,7 @@ class LuftqualitaetCardEditor extends HTMLElement {
 
   _computeLabel(schemaItem) {
     const labels = {
+      area_id: "Raum (befüllt Name und Sensoren automatisch vor)",
       name: "Name des Raums",
       temp_entity: "Temperatursensor",
       humidity_entity: "Luftfeuchtigkeitssensor",
@@ -667,15 +682,89 @@ class LuftqualitaetCardEditor extends HTMLElement {
     return labels[schemaItem.name] || schemaItem.name;
   }
 
+  // Findet für eine Area passende Sensor-Entitäten (per device_class, siehe
+  // AIR_QUALITY_ENTITY_RULES) über die Entity-Registry (hass.entities) inkl. Fallback auf
+  // die Area des zugehörigen Geräts (hass.devices), falls die Entität selbst keine eigene
+  // Area-Zuweisung hat.
+  _findAreaEntityMatches(areaId) {
+    const hass = this._hass;
+    const matches = { temp_entity: null, humidity_entity: null, co2_entity: null, pm25_entity: null };
+    if (!areaId || !hass || !hass.entities || !hass.states) return matches;
+
+    for (const entityId of Object.keys(hass.entities)) {
+      if (entityId.split(".")[0] !== "sensor") continue;
+      const entry = hass.entities[entityId];
+      if (!entry) continue;
+      let entityArea = entry.area_id;
+      if (!entityArea && entry.device_id && hass.devices && hass.devices[entry.device_id]) {
+        entityArea = hass.devices[entry.device_id].area_id;
+      }
+      if (entityArea !== areaId) continue;
+
+      const st = hass.states[entityId];
+      const deviceClass = st && st.attributes && st.attributes.device_class;
+      if (!deviceClass) continue;
+
+      for (const key of Object.keys(AIR_QUALITY_ENTITY_RULES)) {
+        if (matches[key]) continue;
+        if (AIR_QUALITY_ENTITY_RULES[key].deviceClasses.includes(deviceClass)) {
+          matches[key] = entityId;
+        }
+      }
+    }
+    return matches;
+  }
+
+  // Belegt Name + Sensor-Felder aus der gewählten Area vor, ohne Felder zu überschreiben,
+  // die der Nutzer bereits manuell gesetzt hat (siehe _autofilledKeys-Tracking).
+  _applyAreaAutofill(config, areaId) {
+    if (!this._hass) return;
+    const area = this._hass.areas && this._hass.areas[areaId];
+    const areaName = area ? area.name : "";
+
+    if (areaName && (!config.name || this._autofilledKeys.has("name"))) {
+      config.name = areaName;
+      this._autofilledKeys.add("name");
+    }
+
+    const matches = this._findAreaEntityMatches(areaId);
+    for (const key of Object.keys(matches)) {
+      if (matches[key] && (!config[key] || this._autofilledKeys.has(key))) {
+        config[key] = matches[key];
+        this._autofilledKeys.add(key);
+      }
+    }
+  }
+
   _render() {
     if (!this._hass || !this._config) return;
     if (!this._form) {
       this._form = document.createElement("ha-form");
       this._form.addEventListener("value-changed", (ev) => {
         ev.stopPropagation();
-        this._config = ev.detail.value;
+        const newConfig = { ...ev.detail.value };
+        const oldConfig = this._config || {};
+
+        if (newConfig.area_id && newConfig.area_id !== oldConfig.area_id) {
+          this._applyAreaAutofill(newConfig, newConfig.area_id);
+        }
+
+        // Manuelle Bearbeitung eines zuvor automatisch befüllten Felds beendet dessen
+        // Autofill-Status, damit ein späterer Area-Wechsel es nicht mehr überschreibt.
+        const areaMatches = newConfig.area_id ? this._findAreaEntityMatches(newConfig.area_id) : {};
+        const areaName = (this._hass.areas && this._hass.areas[newConfig.area_id]?.name) || null;
+        for (const key of AREA_AUTOFILL_KEYS) {
+          if (this._autofilledKeys.has(key) && newConfig[key] !== oldConfig[key]) {
+            // Wert wurde entweder gerade von _applyAreaAutofill gesetzt (dann identisch mit
+            // dem Match, bleibt markiert) oder vom Nutzer direkt im Formular geändert.
+            const isAreaValue = key === "name" ? newConfig[key] === areaName : newConfig[key] === areaMatches[key];
+            if (!isAreaValue) this._autofilledKeys.delete(key);
+          }
+        }
+
+        this._config = newConfig;
         this.dispatchEvent(new CustomEvent("config-changed", {
-          detail: { config: ev.detail.value },
+          detail: { config: newConfig },
           bubbles: true,
           composed: true
         }));
@@ -695,11 +784,21 @@ class LuftqualitaetCardEditor extends HTMLElement {
   }
 
   // Zeigt zur Auswahl passende, aber inhaltlich unplausible Sensoren als Warnung an
-  // (z.B. bei per YAML gesetzten Entitäten ohne passende device_class).
+  // (z.B. bei per YAML gesetzten Entitäten ohne passende device_class), sowie einen Hinweis,
+  // falls die gewählte Area keine passenden Sensoren enthält.
   _renderWarnings() {
     if (!this._warningsEl) return;
     const problems = validateAirQualityConfig(this._hass, this._config)
       .concat(validateWeatherEntity(this._hass, this._config));
+
+    if (this._config && this._config.area_id) {
+      const matches = this._findAreaEntityMatches(this._config.area_id);
+      const missingInArea = Object.keys(matches).filter((k) => !matches[k]);
+      if (missingInArea.length === Object.keys(matches).length) {
+        problems.push("Gewählter Raum: keine passenden Sensoren gefunden (device_class fehlt vermutlich) - bitte Sensoren manuell zuweisen.");
+      }
+    }
+
     this._warningsEl.innerHTML = problems.length
       ? "⚠ " + problems.join("<br>⚠ ")
       : "";
