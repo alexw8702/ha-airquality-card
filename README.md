@@ -59,6 +59,7 @@ room_max: 22
 | `temp_tolerance` | nein | `1` | Toleranzband (°C) um `temp_target`, innerhalb dessen die Temperatur als optimal gilt |
 | `room_max` | nein | `22` | Obergrenze, ab der die Außentemperatur-Korrektur greift |
 | `theme_mode` | nein | `auto` | Darstellung: `auto` (folgt der Geräte-/Browser-Einstellung, live), `light` oder `dark` |
+| `pm25_avg_window` | nein | `60` | Zeitfenster (Minuten) für den gleitenden PM2.5-Mittelwert, der in die Note einfließt |
 
 Ein Klick auf die Note (nur bei `grade_entity`) oder eine Metrik öffnet den Home-Assistant-Verlauf des jeweiligen Sensors.
 
@@ -78,9 +79,31 @@ Die Karte prüft `temp_entity`/`humidity_entity`/`co2_entity`/`pm25_entity` auf 
 
 Note 1 (sehr gut) bis 5 (schlecht), gewichtet aus CO₂ (30%), PM2.5 (10%), Luftfeuchtigkeit (30%) und Temperatur (30%), sowie dem jeweils schlechtesten Einzelwert (60% Gewicht auf dem Worst-Case, 40% auf dem gewichteten Durchschnitt). Die Temperaturbewertung erhält zusätzlich einen kleinen Bonus, wenn draußen (laut `weather_entity`) ohnehin kühler/wärmer ist, als tagsüber/nachts drinnen erwartet wird — portiert 1:1 aus dem ursprünglichen Template-Helfer.
 
-Die Default-Werte (`temp_target: 21`, `room_max: 22`) eignen sich für die meisten Wohn-/Arbeitsräume; für Räume mit niedrigerer Zieltemperatur (z. B. Schlafräume) `temp_target`, `temp_tolerance` und `room_max` entsprechend anpassen.
+Die Default-Werte (`temp_target: 21`, `room_max: 22`) eignen sich für die meisten Wohn-/Arbeitsräume; für Räume mit niedrigerer Zieltemperatur (z. B. Schlafräume) `temp_target`, `temp_tolerance` und `room_max` entsprechend anpassen. Wird per Area-Auswahl ein Raum mit dem Namen "Schlafzimmer"/"Bedroom" erkannt, setzt der Editor `temp_target` automatisch auf 18 °C (siehe Quellen unten) — manuell gesetzte Werte werden dabei nicht überschrieben.
+
+#### Gesundheitliche Grundlage der Schwellenwerte
+
+Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Baurichtlinien statt an willkürlichen Werten:
+
+- **CO₂** (800 / 1000 / 1400 / 2000 ppm): entspricht den Leitwerten des deutschen Umweltbundesamts (UBA) auf Basis der Pettenkofer-Zahl — <1000 ppm „hygienisch unbedenklich", 1000–2000 ppm „hygienisch auffällig" (Lüftung prüfen), >2000 ppm „hygienisch inakzeptabel". Die WHO definiert für CO₂ selbst keinen Grenzwert, da es in diesen Konzentrationen kein toxikologisches Risiko darstellt, sondern als Lüftungs-Indikator dient.
+- **PM2.5** (5 / 15 / 25 / 50 µg/m³): die unteren beiden Stufen entsprechen den **WHO Global Air Quality Guidelines 2021** (Jahresmittel 5 µg/m³, 24h-Mittel 15 µg/m³ — verschärft gegenüber den alten 2005er-Werten 10/25). Da WHO-Werte selbst Zeit-Mittelwerte sind, fließt in die Note ein **gleitender Mittelwert** (`pm25_avg_window`, Standard 60 Minuten) statt des Momentanwerts ein — kurze Spitzen (Kochen, Kerzen) sollen die Note nicht dominieren. Die Sensor-Kachel zeigt weiterhin den aktuellen Momentanwert (kann daher kurzzeitig von der Note abweichen). Die oberen beiden Stufen (25/50) folgen mangels weiterer WHO-Vorgabe gängigen AQI-Einstufungen (z. B. US EPA).
+- **Luftfeuchtigkeit** (Zielwert 50 %, Toleranzbänder bis ±45): die WHO nennt hier bewusst **keinen Zahlenwert** (nur qualitativ: Feuchte/Schimmel vermeiden, da der Zusammenhang nicht präzise quantifizierbar ist), daher folgt die Karte dem breiten Konsens verschiedener Bau-/Komfortstandards (häufig zitierter Zielbereich 30–60 %).
+- **Temperatur**: WHO Housing and Health Guidelines (2018) empfehlen **18 °C als gesundheitliches Sicherheitsminimum** für die Allgemeinbevölkerung in genutzten Räumen (kein Risiko nachweisbar im Bereich 18–24 °C bei sitzender Tätigkeit). Das ist kein Schlaf-Komfort-Optimum — daher weicht der automatisch gesetzte Schlafzimmer-Wert (18 °C) bewusst vom Wohnraum-Default (21 °C) ab, ohne dass die Karte eine eigene Schlafforschungs-Empfehlung behauptet.
+
+**Quellen:**
+- [UBA – Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft (PDF)](https://www.umweltbundesamt.de/system/files/medien/pdfs/kohlendioxid_2008.pdf)
+- [WHO Global Air Quality Guidelines (Q&A)](https://www.who.int/news-room/questions-and-answers/item/who-global-air-quality-guidelines)
+- [WHO Housing and Health Guidelines – Low indoor temperatures (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK535294/)
+- [WHO Housing and Health Guidelines – High indoor temperatures (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK535285/)
+- [WHO Guidelines for Indoor Air Quality – Dampness and Mould (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK143941/)
 
 ## Changelog
+
+### v0.4.0
+- PM2.5-Bewertung auf WHO Global Air Quality Guidelines 2021 umgestellt (Jahresmittel 5 µg/m³, 24h-Mittel 15 µg/m³ statt der alten 2005er-Werte 10/25) — betrifft sowohl Notenberechnung als auch Kachel-Statustext.
+- Note nutzt für PM2.5 jetzt einen gleitenden Mittelwert (`pm25_avg_window`, Standard 60 Minuten, über die HA History-API) statt des Momentanwerts, um kurzzeitige Spitzen (Kochen etc.) nicht überzubewerten. Fällt bei fehlendem Recorder-Zugriff automatisch auf den Momentanwert zurück.
+- Area-Autofill erkennt Schlafzimmer am Raumnamen ("Schlafzimmer"/"Bedroom") und setzt `temp_target` automatisch auf 18 °C (WHO-Sicherheitsminimum), sofern nicht bereits manuell gesetzt.
+- README um Quellenangaben zu den verwendeten Gesundheits-/Baurichtlinien (UBA, WHO) ergänzt.
 
 ### v0.3.0
 - Neuer Light Mode (`theme_mode`): `auto` (Standard, folgt live der Geräte-/Browser-Farbschema-Einstellung via `prefers-color-scheme`), `light` oder `dark` fest wählbar im Editor.

@@ -145,6 +145,7 @@ class LuftqualitaetCard extends HTMLElement {
       temp_tolerance: 1,
       room_max: 22,
       theme_mode: "auto",
+      pm25_avg_window: 60,
       ...config
     };
   }
@@ -165,7 +166,8 @@ class LuftqualitaetCard extends HTMLElement {
       temp_target: 21,
       temp_tolerance: 1,
       room_max: 22,
-      theme_mode: "auto"
+      theme_mode: "auto",
+      pm25_avg_window: 60
     };
   }
 
@@ -333,10 +335,15 @@ class LuftqualitaetCard extends HTMLElement {
     return { text: "Schlecht", color: "#ef5350" };
   }
 
+  // Schwellen nach WHO Global Air Quality Guidelines 2021 (Jahresmittel 5 µg/m³,
+  // 24h-Mittel 15 µg/m³ - siehe README/Quellen). Bezieht sich auf den aktuellen
+  // Momentanwert der Kachel; die Notenberechnung selbst nutzt einen gleitenden
+  // Mittelwert (_pmNorm/_ensurePmAverage), daher können Kachel-Status und Note kurzzeitig
+  // auseinanderlaufen (z.B. beim Kochen: Kachel "Schlecht", Note reagiert gedämpfter).
   _pm25Status(v) {
     if (v === null) return { text: "–", color: "#8a93a3" };
-    if (v <= 10) return { text: "Gut", color: "#ba68c8" };
-    if (v <= 25) return { text: "Mäßig", color: "#ffb74d" };
+    if (v <= 5) return { text: "Gut", color: "#ba68c8" };
+    if (v <= 15) return { text: "Mäßig", color: "#ffb74d" };
     return { text: "Schlecht", color: "#ef5350" };
   }
 
@@ -351,12 +358,19 @@ class LuftqualitaetCard extends HTMLElement {
     return 5;
   }
 
+  // Schwellen nach WHO Global Air Quality Guidelines 2021: Jahresmittel 5 µg/m³,
+  // 24h-Mittel 15 µg/m³ (verschärft gegenüber den alten 2005er-Werten 10/25, siehe README).
+  // WHO nennt keine weiteren Stufen oberhalb davon; 25/50 als obere Bänder folgen gängigen
+  // AQI-Einstufungen (z.B. US EPA "Unhealthy for Sensitive Groups"/"Unhealthy") als
+  // praktikable Fortsetzung der Skala. v ist hier bereits der gleitende Mittelwert
+  // (siehe _ensurePmAverage), nicht der Momentanwert - WHO-Werte sind selbst Mittelwerte
+  // über Zeiträume, ein 1:1-Vergleich mit Momentanwerten wäre methodisch nicht sauber.
   _pmNorm(v) {
-    const d = Math.abs(v - 1.0);
-    if (d <= 1) return 0.75 + d * 0.75;
-    if (v < 10) return 1.5 + (v - 2) / 8 * 1.0;
-    if (v < 25) return 2.5 + (v - 10) / 15 * 1.0;
-    if (v < 50) return 3.5 + (v - 25) / 25 * 1.0;
+    if (v <= 1) return 0.75;
+    if (v <= 5) return 0.75 + (v - 1) / 4 * 0.75;
+    if (v <= 15) return 1.5 + (v - 5) / 10 * 1.0;
+    if (v <= 25) return 2.5 + (v - 15) / 10 * 1.0;
+    if (v <= 50) return 3.5 + (v - 25) / 25 * 1.0;
     return 5;
   }
 
@@ -386,10 +400,56 @@ class LuftqualitaetCard extends HTMLElement {
     return Number.isNaN(v) ? 0 : v;
   }
 
+  // Gleitender Mittelwert für PM2.5 statt Momentanwert: WHO-Guidelines sind selbst
+  // Zeit-Mittelwerte (Jahr/24h), kurzfristige Spitzen (Kochen, Kerzen) sind normal und
+  // sollen die Note nicht dominieren. Holt die letzten `pm25_avg_window` Minuten über die
+  // HA History-API und cached das Ergebnis für 5 Minuten, um nicht bei jedem Render
+  // (Sensor-Update alle paar Sekunden möglich) neu zu laden. Läuft asynchron und stößt bei
+  // Ankunft neuer Daten ein Re-Render an; bis dahin (und bei Fehlern) fällt _computeGrade()
+  // auf den Momentanwert zurück, damit die Karte sofort nutzbar bleibt.
+  _ensurePmAverage() {
+    const entityId = this._config.pm25_entity;
+    const windowMinutes = Number.isFinite(this._config.pm25_avg_window) && this._config.pm25_avg_window > 0
+      ? this._config.pm25_avg_window
+      : 60;
+    if (!entityId || !this._hass || typeof this._hass.callApi !== "function") return;
+
+    const cache = this._pmAvg;
+    const cacheValid = cache && cache.entityId === entityId && cache.windowMinutes === windowMinutes
+      && Date.now() < cache.refreshAt;
+    if (cacheValid || this._pmAvgFetching) return;
+
+    this._pmAvgFetching = true;
+    const start = new Date(Date.now() - windowMinutes * 60000).toISOString();
+    this._hass.callApi(
+      "GET",
+      `history/period/${start}?filter_entity_id=${entityId}&minimal_response&no_attributes`
+    ).then((result) => {
+      const series = (result && result[0]) || [];
+      const values = series.map((s) => parseFloat(s.state)).filter((v) => Number.isFinite(v));
+      const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+      this._pmAvg = { entityId, windowMinutes, value: avg, refreshAt: Date.now() + 5 * 60000 };
+      this._pmAvgFetching = false;
+      this._render();
+    }).catch(() => {
+      // Kein History-Zugriff (z.B. Recorder deaktiviert) - Note nutzt weiter den Momentanwert.
+      // Kurzer Retry-Abstand statt Dauerschleife von Fehlversuchen.
+      this._pmAvg = { entityId, windowMinutes, value: null, refreshAt: Date.now() + 60000 };
+      this._pmAvgFetching = false;
+    });
+  }
+
+  _pmAverageOrCurrent(entityId) {
+    this._ensurePmAverage();
+    const cache = this._pmAvg;
+    if (cache && cache.entityId === entityId && cache.value !== null) return cache.value;
+    return this._numOr0(entityId);
+  }
+
   _computeGrade() {
     const cfg = this._config;
     const co2 = this._co2Norm(this._numOr0(cfg.co2_entity));
-    const pm = this._pmNorm(this._numOr0(cfg.pm25_entity));
+    const pm = this._pmNorm(this._pmAverageOrCurrent(cfg.pm25_entity));
     const rh = this._rhNorm(this._numOr0(cfg.humidity_entity));
     const traw = this._numOr0(cfg.temp_entity);
     // Falls im Editor geleert (number-Selector kann dann undefined liefern), auf sinnvolle
@@ -640,7 +700,7 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="m-status" style="color:${hStat.color}">${hStat.text}</div>
             </div>
           </div>
-          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen">
+          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Note nutzt einen ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : 60}-Minuten-Mittelwert (WHO-Richtwerte sind Zeit-Mittelwerte), diese Kachel zeigt den aktuellen Momentanwert.">
             <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
               <ha-icon icon="mdi:dots-grid"></ha-icon>
             </div>
@@ -689,7 +749,7 @@ window.customCards.push({
 // Felder, die per Area-Auswahl automatisch vorbelegt werden können. Ein Feld bleibt nur
 // dann "automatisch verwaltet", solange der Nutzer es nicht manuell überschrieben hat -
 // siehe _AUTOFILL_KEYS-Tracking in value-changed.
-const AREA_AUTOFILL_KEYS = ["name", "temp_entity", "humidity_entity", "co2_entity", "pm25_entity"];
+const AREA_AUTOFILL_KEYS = ["name", "temp_entity", "humidity_entity", "co2_entity", "pm25_entity", "temp_target"];
 
 // Visueller Karten-Editor: nutzt das in HA eingebaute <ha-form> mit einem Selector-Schema,
 // damit Nutzer ihre eigenen Entitäten per Dropdown auswählen können (kein YAML nötig).
@@ -734,6 +794,7 @@ class LuftqualitaetCardEditor extends HTMLElement {
         ]
       },
       { name: "grade_entity", selector: { entity: { domain: "sensor" } } },
+      { name: "pm25_avg_window", selector: { number: { min: 5, max: 1440, step: 5, mode: "box", unit_of_measurement: "min" } } },
       {
         name: "theme_mode",
         selector: {
@@ -763,7 +824,8 @@ class LuftqualitaetCardEditor extends HTMLElement {
       temp_tolerance: "Toleranz um Idealtemperatur",
       room_max: "Obergrenze für Außentemperatur-Korrektur",
       grade_entity: "Note-Sensor überschreiben (optional, Legacy)",
-      theme_mode: "Darstellung"
+      theme_mode: "Darstellung",
+      pm25_avg_window: "PM2.5-Mittelungszeitraum für die Note (WHO-Werte sind Zeit-Mittelwerte)"
     };
     return labels[schemaItem.name] || schemaItem.name;
   }
@@ -819,22 +881,51 @@ class LuftqualitaetCardEditor extends HTMLElement {
     return matches;
   }
 
-  // Belegt Name + Sensor-Felder aus der gewählten Area vor, ohne Felder zu überschreiben,
-  // die der Nutzer bereits manuell gesetzt hat (siehe _autofilledKeys-Tracking).
+  // Erkennt Schlafzimmer anhand des Raumnamens (deutsch/englisch, wie von HA beim Anlegen
+  // vorgeschlagen). Für Schlafzimmer setzt die WHO ein niedrigeres Sicherheitsminimum an als
+  // für allgemein genutzte Wohnräume: WHO Housing and Health Guidelines (2018) empfehlen
+  // 18°C als Minimum zum Schutz vor kältebedingten Gesundheitsschäden (siehe README/Quellen).
+  // Das ist kein Schlaf-Komfort-Optimum (dafür gelten in der Schlafforschung oft niedrigere
+  // Werte), sondern der von der WHO belegte gesundheitliche Mindestwert.
+  static BEDROOM_NAME_PATTERN = /schlafzimmer|bedroom/i;
+  static WHO_BEDROOM_MIN_TEMP = 18;
+  static GENERIC_DEFAULT_TEMP_TARGET = 21;
+
+  // Zentrale Quelle für alle aus der Area ableitbaren Werte (Name, Sensoren, ggf.
+  // Schlafzimmer-Temperaturvorgabe). null/undefined bedeutet "für dieses Feld nichts
+  // abzuleiten" - wird von _applyAreaAutofill und der Manuell-Bearbeitung-Erkennung
+  // (value-changed) gemeinsam genutzt, damit beide Stellen dieselbe Definition von
+  // "aktueller Area-Wert" verwenden.
+  _areaDerivedValues(areaId) {
+    const hass = this._hass;
+    const area = hass && hass.areas && hass.areas[areaId];
+    const areaName = area ? area.name : null;
+    const matches = this._findAreaEntityMatches(areaId);
+    const isBedroom = !!areaName && LuftqualitaetCardEditor.BEDROOM_NAME_PATTERN.test(areaName);
+    return {
+      name: areaName,
+      temp_entity: matches.temp_entity,
+      humidity_entity: matches.humidity_entity,
+      co2_entity: matches.co2_entity,
+      pm25_entity: matches.pm25_entity,
+      temp_target: isBedroom ? LuftqualitaetCardEditor.WHO_BEDROOM_MIN_TEMP : null
+    };
+  }
+
+  // Belegt Name, Sensor-Felder und (bei erkanntem Schlafzimmer) die Zieltemperatur aus der
+  // gewählten Area vor, ohne Felder zu überschreiben, die der Nutzer bereits manuell gesetzt
+  // hat (siehe _autofilledKeys-Tracking).
   _applyAreaAutofill(config, areaId) {
     if (!this._hass) return;
-    const area = this._hass.areas && this._hass.areas[areaId];
-    const areaName = area ? area.name : "";
-
-    if (areaName && (!config.name || this._autofilledKeys.has("name"))) {
-      config.name = areaName;
-      this._autofilledKeys.add("name");
-    }
-
-    const matches = this._findAreaEntityMatches(areaId);
-    for (const key of Object.keys(matches)) {
-      if (matches[key] && (!config[key] || this._autofilledKeys.has(key))) {
-        config[key] = matches[key];
+    const derived = this._areaDerivedValues(areaId);
+    for (const key of AREA_AUTOFILL_KEYS) {
+      const value = derived[key];
+      if (value === null || value === undefined) continue;
+      const isEmpty = key === "temp_target"
+        ? (!Number.isFinite(config[key]) || config[key] === LuftqualitaetCardEditor.GENERIC_DEFAULT_TEMP_TARGET)
+        : !config[key];
+      if (isEmpty || this._autofilledKeys.has(key)) {
+        config[key] = value;
         this._autofilledKeys.add(key);
       }
     }
@@ -855,14 +946,12 @@ class LuftqualitaetCardEditor extends HTMLElement {
 
         // Manuelle Bearbeitung eines zuvor automatisch befüllten Felds beendet dessen
         // Autofill-Status, damit ein späterer Area-Wechsel es nicht mehr überschreibt.
-        const areaMatches = newConfig.area_id ? this._findAreaEntityMatches(newConfig.area_id) : {};
-        const areaName = (this._hass.areas && this._hass.areas[newConfig.area_id]?.name) || null;
+        const derived = newConfig.area_id ? this._areaDerivedValues(newConfig.area_id) : {};
         for (const key of AREA_AUTOFILL_KEYS) {
           if (this._autofilledKeys.has(key) && newConfig[key] !== oldConfig[key]) {
             // Wert wurde entweder gerade von _applyAreaAutofill gesetzt (dann identisch mit
-            // dem Match, bleibt markiert) oder vom Nutzer direkt im Formular geändert.
-            const isAreaValue = key === "name" ? newConfig[key] === areaName : newConfig[key] === areaMatches[key];
-            if (!isAreaValue) this._autofilledKeys.delete(key);
+            // dem abgeleiteten Wert, bleibt markiert) oder vom Nutzer direkt im Formular geändert.
+            if (newConfig[key] !== derived[key]) this._autofilledKeys.delete(key);
           }
         }
 
