@@ -59,6 +59,8 @@ function validateWeatherEntity(hass, config) {
 const CARD_PALETTES = {
   dark: {
     cardBg: "#12151c",
+    cardBorder: "none",
+    cardBackdropFilter: "none",
     cardShadow: "0 2px 10px rgba(0,0,0,0.4)",
     title: "#e7e9ee",
     metricBg: "#1a1f2a",
@@ -72,6 +74,8 @@ const CARD_PALETTES = {
   },
   light: {
     cardBg: "#f2f3f5",
+    cardBorder: "none",
+    cardBackdropFilter: "none",
     cardShadow: "0 2px 10px rgba(0,0,0,0.10)",
     title: "#1c1f26",
     metricBg: "#ffffff",
@@ -82,6 +86,30 @@ const CARD_PALETTES = {
     footer: "#9aa1ac",
     hintColor: "#6b7280",
     problemColor: "#6b7280"
+  }
+};
+
+// Glasmorphismus-Overrides: greifen nur bei config.glass_effect === true. Macht Karte und
+// Kacheln halbtransparent + weichgezeichnet, damit ein HA-Dashboard-Hintergrundbild
+// durchscheint, statt die deckenden Standardfarben aus CARD_PALETTES zu verwenden. Bewusst
+// opt-in (Default aus) statt Standardverhalten, da ein Blur ohne Hintergrundbild (die meisten
+// HA-Dashboards haben keins) keinen Mehrwert bringt und nur Kontrast kostet.
+const GLASS_OVERRIDES = {
+  dark: {
+    cardBg: "rgba(18, 21, 28, 0.55)",
+    cardBorder: "1px solid rgba(255, 255, 255, 0.08)",
+    cardBackdropFilter: "blur(20px) saturate(150%)",
+    metricBg: "rgba(26, 31, 42, 0.45)",
+    metricHoverBg: "rgba(34, 40, 57, 0.55)",
+    metricBackdropFilter: "blur(10px) saturate(150%)"
+  },
+  light: {
+    cardBg: "rgba(255, 255, 255, 0.55)",
+    cardBorder: "1px solid rgba(255, 255, 255, 0.6)",
+    cardBackdropFilter: "blur(20px) saturate(150%)",
+    metricBg: "rgba(255, 255, 255, 0.45)",
+    metricHoverBg: "rgba(255, 255, 255, 0.65)",
+    metricBackdropFilter: "blur(10px) saturate(150%)"
   }
 };
 
@@ -146,6 +174,7 @@ class LuftqualitaetCard extends HTMLElement {
       room_max: 22,
       theme_mode: "auto",
       pm25_avg_window: 1440,
+      glass_effect: false,
       ...config
     };
   }
@@ -167,7 +196,8 @@ class LuftqualitaetCard extends HTMLElement {
       temp_tolerance: 1,
       room_max: 22,
       theme_mode: "auto",
-      pm25_avg_window: 1440
+      pm25_avg_window: 1440,
+      glass_effect: false
     };
   }
 
@@ -536,7 +566,10 @@ class LuftqualitaetCard extends HTMLElement {
   _render() {
     if (!this._hass || !this._config) return;
 
-    const palette = CARD_PALETTES[this._isDarkMode() ? "dark" : "light"];
+    const paletteMode = this._isDarkMode() ? "dark" : "light";
+    const palette = this._config.glass_effect
+      ? { ...CARD_PALETTES[paletteMode], ...GLASS_OVERRIDES[paletteMode] }
+      : CARD_PALETTES[paletteMode];
 
     const required = ["temp_entity", "humidity_entity", "co2_entity", "pm25_entity"];
     const missing = required.filter((k) => !this._config[k]);
@@ -616,7 +649,9 @@ class LuftqualitaetCard extends HTMLElement {
           padding:18px;
           font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
           box-shadow:${palette.cardShadow};
-          border:none;
+          border:${palette.cardBorder};
+          -webkit-backdrop-filter:${palette.cardBackdropFilter};
+          backdrop-filter:${palette.cardBackdropFilter};
         }
         .room-title{ text-align:center; color:${palette.title}; font-size:21px; font-weight:600; margin-bottom:6px; }
         .grade-wrap{ display:flex; justify-content:center; margin-bottom:18px; padding-top:4px; }
@@ -643,6 +678,8 @@ class LuftqualitaetCard extends HTMLElement {
           cursor:pointer;
           transition:background 0.15s ease, transform 0.15s ease;
           min-width:0;
+          -webkit-backdrop-filter:${palette.metricBackdropFilter || "none"};
+          backdrop-filter:${palette.metricBackdropFilter || "none"};
         }
         .metric:hover{ background:${palette.metricHoverBg}; }
         .metric:active{ transform:scale(0.98); }
@@ -813,7 +850,8 @@ class LuftqualitaetCardEditor extends HTMLElement {
             ]
           }
         }
-      }
+      },
+      { name: "glass_effect", selector: { boolean: {} } }
     ];
   }
 
@@ -831,7 +869,8 @@ class LuftqualitaetCardEditor extends HTMLElement {
       room_max: "Obergrenze für Außentemperatur-Korrektur",
       grade_entity: "Note-Sensor überschreiben (optional, Legacy)",
       theme_mode: "Darstellung",
-      pm25_avg_window: "PM2.5-Mittelungszeitraum für die Note (WHO-Werte sind Zeit-Mittelwerte)"
+      pm25_avg_window: "PM2.5-Mittelungszeitraum für die Note (WHO-Werte sind Zeit-Mittelwerte)",
+      glass_effect: "Glass-Effekt (halbtransparent, für Dashboards mit Hintergrundbild)"
     };
     return labels[schemaItem.name] || schemaItem.name;
   }

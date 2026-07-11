@@ -60,6 +60,7 @@ room_max: 22
 | `room_max` | nein | `22` | Obergrenze, ab der die Außentemperatur-Korrektur greift |
 | `theme_mode` | nein | `auto` | Darstellung: `auto` (folgt der Geräte-/Browser-Einstellung, live), `light` oder `dark` |
 | `pm25_avg_window` | nein | `1440` (24h) | Zeitfenster (Minuten) für den gleitenden PM2.5-Mittelwert, der in die Note einfließt — Default entspricht dem 24h-Mittelwert der WHO-Guidelines |
+| `glass_effect` | nein | `false` | Halbtransparente Glasmorphismus-Optik (Karte + Kacheln) statt deckender Hintergrundfarbe — siehe unten |
 
 Ein Klick auf die Note (nur bei `grade_entity`) oder eine Metrik öffnet den Home-Assistant-Verlauf des jeweiligen Sensors.
 
@@ -68,6 +69,10 @@ Ein Klick auf die Note (nur bei `grade_entity`) oder eine Metrik öffnet den Hom
 Die Karte wurde ursprünglich für ein dunkles Design entworfen und bringt seit v0.3.0 zusätzlich ein helles Pendant mit. Im Editor unter "Darstellung" wählbar:
 - **Automatisch** (Standard): folgt der Geräte-/Browser-Einstellung (`prefers-color-scheme`), reagiert live auf Änderungen (z. B. wenn das Handy zwischen Tag- und Nachtmodus wechselt).
 - **Hell** / **Dunkel**: fest eingestellt, unabhängig vom System.
+
+### Glass-Effekt
+
+Mit `glass_effect: true` wird die Karte halbtransparent mit Weichzeichner (Glasmorphismus) statt einer deckenden Hintergrundfarbe dargestellt — lohnt sich vor allem, wenn das Dashboard ein Hintergrundbild verwendet (z. B. über ein HA-Theme oder eine Hintergrundbild-Karte), da dieses dann durch die Karte hindurchschimmert. Ohne Hintergrundbild bringt der Effekt keinen sichtbaren Mehrwert, daher ist er standardmäßig deaktiviert. Funktioniert in beiden Darstellungsmodi (hell/dunkel).
 
 ### Plausibilitätsprüfung
 
@@ -98,6 +103,9 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 - [WHO Guidelines for Indoor Air Quality – Dampness and Mould (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK143941/)
 
 ## Changelog
+
+### v0.5.0
+- Neuer optionaler Glass-Effekt (`glass_effect`, Default `false`): halbtransparente, weichgezeichnete Optik für Karte und Kacheln — passend für Dashboards mit Hintergrundbild. Funktioniert in Hell- und Dunkel-Modus.
 
 ### v0.4.2
 - PM2.5-Kachel-Status (Gut/Mäßig/Schlecht inkl. Farbe) nutzt jetzt denselben 24h-Mittelwert wie die Note statt des Momentanwerts. Vorher konnte die Kachel dauerhaft "Schlecht" anzeigen, obwohl der WHO-relevante 24h-Trend bereits "Mäßig" oder besser war — die Mittelwertbildung wirkte sich dadurch für den Nutzer nicht sichtbar aus. Die angezeigte Zahl bleibt weiterhin der Momentanwert.
