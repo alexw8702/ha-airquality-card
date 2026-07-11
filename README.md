@@ -75,6 +75,9 @@ Die Default-Werte (`temp_target: 21`, `room_max: 22`) eignen sich für die meist
 
 ## Changelog
 
+### v0.2.3
+- Detailgrad der animierten Note-Blob-Kontur verdoppelt (44 → 88 Segmente) für einen glatteren Rand, besonders auf schmalen Karten sichtbar.
+
 ### v0.2.2
 - Area-Autofill verlangt jetzt, dass ein einzelnes Gerät alle vier Sensortypen liefert, statt beliebige Treffer über mehrere Geräte hinweg zu mischen. Verhindert, dass bei mehreren Sensoren desselben Typs im selben Raum (z. B. zwei CO₂-Sensoren unterschiedlicher Geräte) willkürlich einer davon gewählt wird.
 

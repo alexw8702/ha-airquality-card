@@ -77,7 +77,7 @@ class LuftqualitaetCard extends HTMLElement {
       a3: 1.6 + rnd() * 1.0
     };
     // Winkel-Tabelle einmalig vorab berechnen statt jeden Frame neu (spart Math.cos/sin Aufrufe)
-    this._N = 44;
+    this._N = 88;
     this._cosA = new Float32Array(this._N + 1);
     this._sinA = new Float32Array(this._N + 1);
     for (let i = 0; i <= this._N; i++) {
