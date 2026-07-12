@@ -656,6 +656,54 @@ class LuftqualitaetCard extends HTMLElement {
     const gid = grade === null ? "x" : Math.round(grade * 10);
     const baseMain = 90, baseEcho = 94;
 
+    // Dynamic color interpolation for temperature (Blue -> Green -> Red)
+    const getTempColor = (t) => {
+      if (t === null || isNaN(t)) return { color: "#66bb6a", bg: "rgba(102,187,106,0.15)" };
+      let r, g, b;
+      if (t <= 15) {
+        r = 33; g = 150; b = 243;
+      } else if (t >= 27) {
+        r = 244; g = 67; b = 54;
+      } else if (t < 21) {
+        const pct = (t - 15) / 6;
+        r = Math.round(33 + pct * (76 - 33));
+        g = Math.round(150 + pct * (175 - 150));
+        b = Math.round(243 + pct * (80 - 243));
+      } else if (t > 22) {
+        const pct = (t - 22) / 5;
+        r = Math.round(76 + pct * (244 - 76));
+        g = Math.round(175 + pct * (67 - 175));
+        b = Math.round(80 + pct * (54 - 80));
+      } else {
+        r = 76; g = 175; b = 80;
+      }
+      return { color: `rgb(${r},${g},${b})`, bg: `rgba(${r},${g},${b},0.15)` };
+    };
+    const tColor = getTempColor(temp);
+
+    // Dynamic rain drop count for humidity (only shown on hover)
+    const humVal = hum === null ? 0 : hum;
+    let rCount = 0;
+    if (humVal > 70) rCount = 8;
+    else if (humVal > 50) rCount = 5;
+    else if (humVal > 30) rCount = 3;
+
+    const rainHTML = this._reduced || rCount === 0 ? "" : `
+      <div class="rain-drops">
+        ${Array.from({ length: rCount }).map((_, i) => {
+          const tx = -5 - ((i * 3) % 6);
+          const duration = 0.6 + ((i * 3) % 4) * 0.1;
+          return `<span class="rain-drop" style="
+            --delay: ${i * 0.15}s;
+            --left: ${10 + (i * 23) % 80}%;
+            --duration: ${duration}s;
+            --tx: ${tx}px;
+          "></span>`;
+        }).join("")}
+      </div>
+    `;
+
+    // Dynamic particles for PM2.5 (entire tile background)
     const pmVal = pm25 === null ? 0 : pm25;
     let pCount = 1;
     let pDuration = 3.5;
@@ -667,15 +715,13 @@ class LuftqualitaetCard extends HTMLElement {
       <div class="pm-particles">
         ${Array.from({ length: pCount }).map((_, i) => {
           const tx = ((i * 11) % 17) - 8;
-          const ty = -10 - ((i * 7) % 8);
           return `<span class="particle" style="
             --delay: ${i * 0.3}s;
-            --left: ${20 + (i * 23) % 60}%;
-            --top: ${60 + (i * 7) % 30}%;
+            --left: ${10 + (i * 23) % 80}%;
             --duration: ${pDuration}s;
             --size: ${1.5 + (i * 1.1) % 2.5}px;
             --tx: ${tx}px;
-            --ty: ${ty}px;
+            --ty: -75px;
           "></span>`;
         }).join("")}
       </div>
@@ -723,9 +769,16 @@ class LuftqualitaetCard extends HTMLElement {
           min-width:0;
           -webkit-backdrop-filter:${palette.metricBackdropFilter || "none"};
           backdrop-filter:${palette.metricBackdropFilter || "none"};
+          position:relative;
+          overflow:hidden;
         }
         .metric:hover{ background:${palette.metricHoverBg}; }
         .metric:active{ transform:scale(0.98); }
+        .metric > .m-icon,
+        .metric > .m-info {
+          position:relative;
+          z-index:1;
+        }
         .m-icon{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
         .m-icon ha-icon{ --mdc-icon-size:22px; }
         .m-info{ min-width:0; overflow:hidden; }
@@ -735,14 +788,25 @@ class LuftqualitaetCard extends HTMLElement {
         .m-status{ font-size:11px; font-weight:500; margin-top:2px; }
         .footer{ margin-top:16px; text-align:center; color:${palette.footer}; font-size:12px; }
 
-        /* PM2.5 Particle Simulation */
-        .pm-particles{ position:absolute; inset:0; pointer-events:none; }
-        .particle{ position:absolute; left:var(--left); top:var(--top); width:var(--size); height:var(--size); background-color:currentColor; border-radius:50%; opacity:0; animation:float-particle var(--duration) linear infinite; animation-delay:var(--delay); }
+        /* PM2.5 Particle Simulation (Entire tile background) */
+        .pm-particles{ position:absolute; inset:0; pointer-events:none; z-index:0; }
+        .particle{ position:absolute; left:var(--left); bottom:-8px; width:var(--size); height:var(--size); background-color:currentColor; border-radius:50%; opacity:0; animation:float-particle var(--duration) linear infinite; animation-delay:var(--delay); }
         @keyframes float-particle {
-          0% { transform: translate(0, 0); opacity: 0; }
-          20% { opacity: 0.6; }
-          80% { opacity: 0.6; }
+          0% { transform: translateY(0); opacity: 0; }
+          20% { opacity: 0.25; }
+          80% { opacity: 0.25; }
           100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+
+        /* Humidity Rain Drops (Entire tile background, only on hover) */
+        .rain-drops{ position:absolute; inset:0; pointer-events:none; z-index:0; }
+        .rain-drop{ position:absolute; left:var(--left); top:-10px; width:1px; height:6px; background-color:currentColor; opacity:0; }
+        .metric:hover .rain-drop { animation: fall-rain var(--duration) linear infinite; animation-delay:var(--delay); }
+        @keyframes fall-rain {
+          0% { transform: translate(0, 0) skewX(-15deg); opacity: 0; }
+          10% { opacity: 0.35; }
+          90% { opacity: 0.35; }
+          100% { transform: translate(var(--tx), 75px) skewX(-15deg); opacity: 0; }
         }
 
         /* Hover Animations for Icons */
@@ -773,7 +837,7 @@ class LuftqualitaetCard extends HTMLElement {
 
         /* Accessibility (prefers-reduced-motion) */
         @media (prefers-reduced-motion: reduce) {
-          .particle, ha-icon { animation: none !important; }
+          .particle, .rain-drop, ha-icon { animation: none !important; }
         }
       </style>
       <ha-card>
@@ -798,7 +862,7 @@ class LuftqualitaetCard extends HTMLElement {
         </div>
         <div class="metrics">
           <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
-            <div class="m-icon" style="background:rgba(102,187,106,0.15); color:#66bb6a;">
+            <div class="m-icon" style="background:${tColor.bg}; color:${tColor.color};">
               <ha-icon icon="mdi:thermometer"></ha-icon>
             </div>
             <div class="m-info">
@@ -818,6 +882,7 @@ class LuftqualitaetCard extends HTMLElement {
             </div>
           </div>
           <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen">
+            ${rainHTML}
             <div class="m-icon" style="background:rgba(79,195,247,0.15); color:#4fc3f7;">
               <ha-icon icon="mdi:water-outline"></ha-icon>
             </div>
@@ -828,9 +893,9 @@ class LuftqualitaetCard extends HTMLElement {
             </div>
           </div>
           <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
+            ${particleHTML}
             <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
               <ha-icon icon="mdi:dots-grid"></ha-icon>
-              ${particleHTML}
             </div>
             <div class="m-info">
               <div class="m-label">PM2.5</div>

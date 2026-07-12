@@ -117,11 +117,12 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
-### v0.6.0-beta.1
-- 🚀 **Animationen für Kacheln & PM2.5-Partikel**:
-  * **Hover-Animationen**: Die Kachel-Icons bewegen sich passend zum gemessenen Sensor bei Hover (Thermometer pulsiert, Wassertropfen schwingt, CO₂ wackelt, PM2.5 rotiert).
-  * **Partikel-Simulation**: Im PM2.5-Icon schweben kleine Staubpartikel nach oben. Die Partikelanzahl und die Aufstiegsgeschwindigkeit passen sich live dem Feinstaub-Messwert an (1 träges Partikel bei geringer Belastung bis zu 8 schnelle Partikel bei hoher Belastung).
-  * **Barrierefreiheit**: Alle Animationen halten sich strikt an die Systemeinstellung `prefers-reduced-motion` und schalten sich bei reduzierter Bewegung ab.
+### v0.6.0-beta.2
+- 🚀 **Kachel-Animationen & Ambient-Effekte**:
+  * **Temperatur-Kachel**: Das Icon und sein kreisförmiger Hintergrund wechseln fließend ihre Farbe – von Eisblau (<= 15°C) über Komfort-Grün (21–22°C) bis Signalrot (>= 27°C). Bei Hover pulsiert das Thermometer-Icon dezent vertikal.
+  * **Feinstaub-Partikeleffekt (PM2.5)**: Kleine Staubpartikel schweben im Hintergrund der gesamten PM2.5-Kachel nach oben. Die Anzahl (1–8) und die Aufstiegsgeschwindigkeit passen sich live dem Feinstaub-Messwert an. Bei Hover rotiert das Icon langsam.
+  * **Regentropfen-Effekt (Luftfeuchtigkeit)**: Bei Hover fallen zarte, diagonale Regentropfen-Striche durch den Kachelhintergrund. Die Tropfenanzahl skaliert live mit dem Feuchtigkeitswert (von 0 Tropfen bei Trockenheit bis 8 Tropfen bei Nässe).
+  * **Barrierefreiheit**: Alle Effekte berücksichtigen die Systemeinstellung `prefers-reduced-motion` und schalten sich bei reduzierter Bewegung ab.
 
 ### v0.5.5
 - Screenshot der Karte im README ergänzt, GitHub-Topics gesetzt — behebt die fehlschlagenden HACS-Validierungs-Checks „Validation images" und „Validation topics". Keine funktionale Änderung.
