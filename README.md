@@ -117,9 +117,10 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
-### v0.6.0-beta.2
+### v0.6.0-beta.3
 - 🚀 **Kachel-Animationen & Ambient-Effekte**:
   * **Temperatur-Kachel**: Das Icon und sein kreisförmiger Hintergrund wechseln fließend ihre Farbe – von Eisblau (<= 15°C) über Komfort-Grün (21–22°C) bis Signalrot (>= 27°C). Bei Hover pulsiert das Thermometer-Icon dezent vertikal.
+  * **CO₂-Kachel (Ambient-Glow & Molekular-Jitter)**: Bei erhöhten Werten glüht der Hintergrund der Kachel dezent pulsierend (atmender Box-Shadow) in Orange (> 800 ppm) bzw. Rot (> 1400 ppm). Bei Hover fängt das CO₂-Molekül-Icon passend zur Konzentration an zu zittern.
   * **Feinstaub-Partikeleffekt (PM2.5)**: Kleine Staubpartikel schweben im Hintergrund der gesamten PM2.5-Kachel nach oben. Die Anzahl (1–8) und die Aufstiegsgeschwindigkeit passen sich live dem Feinstaub-Messwert an. Bei Hover rotiert das Icon langsam.
   * **Regentropfen-Effekt (Luftfeuchtigkeit)**: Bei Hover fallen zarte, diagonale Regentropfen-Striche durch den Kachelhintergrund. Die Tropfenanzahl skaliert live mit dem Feuchtigkeitswert (von 0 Tropfen bei Trockenheit bis 8 Tropfen bei Nässe).
   * **Barrierefreiheit**: Alle Effekte berücksichtigen die Systemeinstellung `prefers-reduced-motion` und schalten sich bei reduzierter Bewegung ab.

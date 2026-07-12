@@ -703,6 +703,26 @@ class LuftqualitaetCard extends HTMLElement {
       </div>
     `;
 
+    // CO2 Animation Configuration (UBA Limits)
+    const co2Val = co2 === null ? 0 : co2;
+    let co2VibDuration = "0s";
+    let co2GlowDuration = "0s";
+    let co2GlowColor = "rgba(0,0,0,0)";
+    
+    if (co2Val > 1400) {
+      co2VibDuration = "0.08s"; // Fast jitter
+      co2GlowDuration = "1.5s"; // Fast warning pulse
+      co2GlowColor = "rgba(239,83,80,0.35)"; // Red
+    } else if (co2Val > 800) {
+      co2VibDuration = "0.25s"; // Medium jitter
+      co2GlowDuration = "3.0s"; // Slow breath
+      co2GlowColor = "rgba(255,167,38,0.25)"; // Orange/Amber
+    }
+
+    const co2GlowStyle = co2Val > 800 && !this._reduced
+      ? `animation: co2-glow ${co2GlowDuration} ease-in-out infinite alternate; --co2-glow-color: ${co2GlowColor};`
+      : "";
+
     // Dynamic particles for PM2.5 (entire tile background)
     const pmVal = pm25 === null ? 0 : pm25;
     let pCount = 1;
@@ -809,10 +829,20 @@ class LuftqualitaetCard extends HTMLElement {
           100% { transform: translate(var(--tx), 75px) skewX(-15deg); opacity: 0; }
         }
 
+        /* CO2 Breathing Box-Shadow Glow */
+        @keyframes co2-glow {
+          0% {
+            box-shadow: inset 0 0 0 rgba(0,0,0,0), 0 0 0 rgba(0,0,0,0);
+          }
+          100% {
+            box-shadow: inset 0 0 12px var(--co2-glow-color), 0 0 8px var(--co2-glow-color);
+          }
+        }
+
         /* Hover Animations for Icons */
         .metric:hover .m-icon ha-icon[icon="mdi:thermometer"] { animation: temp-pulse 1.2s ease-in-out infinite alternate; }
         .metric:hover .m-icon ha-icon[icon="mdi:water-outline"] { animation: hum-swing 1.4s ease-in-out infinite; }
-        .metric:hover .m-icon ha-icon[icon="mdi:molecule-co2"] { animation: co2-wobble 1.6s ease-in-out infinite; }
+        .metric:hover .m-icon ha-icon[icon="mdi:molecule-co2"] { animation: co2-vibrate var(--co2-vib-dur) linear infinite; }
         .metric:hover .m-icon ha-icon[icon="mdi:dots-grid"] { animation: pm-swirl 2s ease-in-out infinite; }
 
         @keyframes temp-pulse {
@@ -824,10 +854,13 @@ class LuftqualitaetCard extends HTMLElement {
           30% { transform: rotate(-10deg); transform-origin: top center; }
           70% { transform: rotate(10deg); transform-origin: top center; }
         }
-        @keyframes co2-wobble {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-6deg); }
-          75% { transform: rotate(6deg); }
+        @keyframes co2-vibrate {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          20% { transform: translate(-1px, 0.5px) rotate(-1deg); }
+          40% { transform: translate(-0.5px, -1px) rotate(1deg); }
+          60% { transform: translate(1px, 0.5px) rotate(-0.5deg); }
+          80% { transform: translate(0.5px, -0.5px) rotate(0.5deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
         }
         @keyframes pm-swirl {
           0% { transform: rotate(0deg) scale(1); }
@@ -838,6 +871,7 @@ class LuftqualitaetCard extends HTMLElement {
         /* Accessibility (prefers-reduced-motion) */
         @media (prefers-reduced-motion: reduce) {
           .particle, .rain-drop, ha-icon { animation: none !important; }
+          .metric { animation: none !important; }
         }
       </style>
       <ha-card>
@@ -871,7 +905,7 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="m-status" style="color:${tStat.color}">${tStat.text}</div>
             </div>
           </div>
-          <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen">
+          <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
             <div class="m-icon" style="background:rgba(102,187,106,0.15); color:#66bb6a;">
               <ha-icon icon="mdi:molecule-co2"></ha-icon>
             </div>
