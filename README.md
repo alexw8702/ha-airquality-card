@@ -4,6 +4,8 @@ Eine Custom Card für Home Assistant Lovelace, die die Raumluftqualität auf ein
 
 Ursprünglich als Inline-Dashboard-Ressource entwickelt und mehrfach (pro Raum eine Instanz) im Einsatz (Entwicklungsstufe 1, nie als eigenes Release veröffentlicht). Dieses Repo macht die Karte als eigenständiges HACS-Plugin installier- und versionierbar (Entwicklungsstufe 2 → erstes Release v0.2.0). Die Note wurde bisher von einem separaten UI-Template-Helfer berechnet – dieser wird bei einer HACS-Installation nicht mit übernommen, daher berechnet die Karte die Note selbst (siehe unten).
 
+![Air Quality Card](images/screenshot.png)
+
 ## Installation
 
 ### Über HACS
@@ -114,6 +116,9 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 - [WHO Guidelines for Indoor Air Quality – Dampness and Mould (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK143941/)
 
 ## Changelog
+
+### v0.5.5
+- Screenshot der Karte im README ergänzt, GitHub-Topics gesetzt — behebt die fehlschlagenden HACS-Validierungs-Checks „Validation images" und „Validation topics". Keine funktionale Änderung.
 
 ### v0.5.4
 - 🐛 **Bugfix:** `setConfig()` löste kein Neu-Rendern aus, sondern verließ sich vollständig auf den `hass`-Setter. Lovelace ruft `setConfig()` bei jeder Editor-Änderung auf, setzt `hass` danach aber nicht zuverlässig erneut — und der `hass`-Setter selbst rendert nur bei geänderter Sensor-Signatur neu. Reine Config-Änderungen im visuellen Editor (Darstellungsmodus, Glass-Effekt, PM2.5-Mittelungsfenster, Zieltemperatur, …) blieben dadurch unsichtbar, bis zufällig ein beobachteter Sensor aktualisierte. `setConfig()` rendert jetzt eigenständig neu. 2 neue Regressionstests (73 gesamt).
