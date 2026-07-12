@@ -117,6 +117,12 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
+### v0.6.0-beta.1
+- 🚀 **Animationen für Kacheln & PM2.5-Partikel**:
+  * **Hover-Animationen**: Die Kachel-Icons bewegen sich passend zum gemessenen Sensor bei Hover (Thermometer pulsiert, Wassertropfen schwingt, CO₂ wackelt, PM2.5 rotiert).
+  * **Partikel-Simulation**: Im PM2.5-Icon schweben kleine Staubpartikel nach oben. Die Partikelanzahl und die Aufstiegsgeschwindigkeit passen sich live dem Feinstaub-Messwert an (1 träges Partikel bei geringer Belastung bis zu 8 schnelle Partikel bei hoher Belastung).
+  * **Barrierefreiheit**: Alle Animationen halten sich strikt an die Systemeinstellung `prefers-reduced-motion` und schalten sich bei reduzierter Bewegung ab.
+
 ### v0.5.5
 - Screenshot der Karte im README ergänzt, GitHub-Topics gesetzt — behebt die fehlschlagenden HACS-Validierungs-Checks „Validation images" und „Validation topics". Keine funktionale Änderung.
 

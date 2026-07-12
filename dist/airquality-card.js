@@ -656,6 +656,31 @@ class LuftqualitaetCard extends HTMLElement {
     const gid = grade === null ? "x" : Math.round(grade * 10);
     const baseMain = 90, baseEcho = 94;
 
+    const pmVal = pm25 === null ? 0 : pm25;
+    let pCount = 1;
+    let pDuration = 3.5;
+    if (pmVal > 25) { pCount = 8; pDuration = 1.2; }
+    else if (pmVal > 15) { pCount = 5; pDuration = 1.8; }
+    else if (pmVal > 5) { pCount = 3; pDuration = 2.5; }
+
+    const particleHTML = this._reduced ? "" : `
+      <div class="pm-particles">
+        ${Array.from({ length: pCount }).map((_, i) => {
+          const tx = ((i * 11) % 17) - 8;
+          const ty = -10 - ((i * 7) % 8);
+          return `<span class="particle" style="
+            --delay: ${i * 0.3}s;
+            --left: ${20 + (i * 23) % 60}%;
+            --top: ${60 + (i * 7) % 30}%;
+            --duration: ${pDuration}s;
+            --size: ${1.5 + (i * 1.1) % 2.5}px;
+            --tx: ${tx}px;
+            --ty: ${ty}px;
+          "></span>`;
+        }).join("")}
+      </div>
+    `;
+
     this.shadowRoot.innerHTML = `
       <style>
         :host { display:block; }
@@ -701,7 +726,7 @@ class LuftqualitaetCard extends HTMLElement {
         }
         .metric:hover{ background:${palette.metricHoverBg}; }
         .metric:active{ transform:scale(0.98); }
-        .m-icon{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+        .m-icon{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
         .m-icon ha-icon{ --mdc-icon-size:22px; }
         .m-info{ min-width:0; overflow:hidden; }
         .m-label{ font-size:11px; color:${palette.label}; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -709,6 +734,47 @@ class LuftqualitaetCard extends HTMLElement {
         .m-value .unit{ font-size:11px; font-weight:400; color:${palette.unit}; margin-left:2px; }
         .m-status{ font-size:11px; font-weight:500; margin-top:2px; }
         .footer{ margin-top:16px; text-align:center; color:${palette.footer}; font-size:12px; }
+
+        /* PM2.5 Particle Simulation */
+        .pm-particles{ position:absolute; inset:0; pointer-events:none; }
+        .particle{ position:absolute; left:var(--left); top:var(--top); width:var(--size); height:var(--size); background-color:currentColor; border-radius:50%; opacity:0; animation:float-particle var(--duration) linear infinite; animation-delay:var(--delay); }
+        @keyframes float-particle {
+          0% { transform: translate(0, 0); opacity: 0; }
+          20% { opacity: 0.6; }
+          80% { opacity: 0.6; }
+          100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+
+        /* Hover Animations for Icons */
+        .metric:hover .m-icon ha-icon[icon="mdi:thermometer"] { animation: temp-pulse 1.2s ease-in-out infinite alternate; }
+        .metric:hover .m-icon ha-icon[icon="mdi:water-outline"] { animation: hum-swing 1.4s ease-in-out infinite; }
+        .metric:hover .m-icon ha-icon[icon="mdi:molecule-co2"] { animation: co2-wobble 1.6s ease-in-out infinite; }
+        .metric:hover .m-icon ha-icon[icon="mdi:dots-grid"] { animation: pm-swirl 2s ease-in-out infinite; }
+
+        @keyframes temp-pulse {
+          0% { transform: translateY(0) scale(1); }
+          100% { transform: translateY(-2px) scale(1.05); }
+        }
+        @keyframes hum-swing {
+          0%, 100% { transform: rotate(0deg); transform-origin: top center; }
+          30% { transform: rotate(-10deg); transform-origin: top center; }
+          70% { transform: rotate(10deg); transform-origin: top center; }
+        }
+        @keyframes co2-wobble {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-6deg); }
+          75% { transform: rotate(6deg); }
+        }
+        @keyframes pm-swirl {
+          0% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.08); }
+          100% { transform: rotate(360deg) scale(1); }
+        }
+
+        /* Accessibility (prefers-reduced-motion) */
+        @media (prefers-reduced-motion: reduce) {
+          .particle, ha-icon { animation: none !important; }
+        }
       </style>
       <ha-card>
         <div class="room-title">${roomName}</div>
@@ -764,6 +830,7 @@ class LuftqualitaetCard extends HTMLElement {
           <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
             <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
               <ha-icon icon="mdi:dots-grid"></ha-icon>
+              ${particleHTML}
             </div>
             <div class="m-info">
               <div class="m-label">PM2.5</div>
