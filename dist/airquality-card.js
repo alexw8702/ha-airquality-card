@@ -442,7 +442,8 @@ class LuftqualitaetCard extends HTMLElement {
   }
 
   _startLoop() {
-    if (!this._reduced && this._raf === null) {
+    const isAnimated = !this._config || this._config.card_style === "classic" || this._config.card_style === "nordic" || !this._config.card_style;
+    if (!this._reduced && isAnimated && this._raf === null) {
       this._raf = window.requestAnimationFrame(this._tickBound);
     }
   }
@@ -731,13 +732,14 @@ class LuftqualitaetCard extends HTMLElement {
   }
 
   _tick(ts) {
+    const isAnimated = !this._config || this._config.card_style === "classic" || this._config.card_style === "nordic" || !this._config.card_style;
     if (this._paths && this._paths.main && this._paths.echo) {
       const pm = ts * this._r.spdMain + this._r.offMain;
       const pe = ts * this._r.spdEcho + this._r.offEcho;
       this._paths.main.setAttribute("d", this._wavePath(this._paths.baseMain, pm));
       this._paths.echo.setAttribute("d", this._wavePath(this._paths.baseEcho, pe));
     }
-    if (this._visible) {
+    if (this._visible && isAnimated) {
       this._raf = window.requestAnimationFrame(this._tickBound);
     } else {
       this._raf = null;
