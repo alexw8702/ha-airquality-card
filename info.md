@@ -8,7 +8,8 @@ Karte über den visuellen Editor hinzufügen ("Karte hinzufügen" → "Luftquali
 
 **Weitere Features**
 - **Hell/Dunkel-Darstellung**: folgt standardmäßig automatisch der Geräte-/Systemeinstellung, alternativ fest wählbar.
-- **Glass-Effekt** (optional): halbtransparente Optik für Dashboards mit Hintergrundbild.
+- **Zwei Design-Stile**: Klassisch (futuristischer Blob) oder **Nordic Minimal / Organic** (gemütlicher skandinavischer Look mit organischen Formen und Serif-Typografie, in Light & Dark).
+- **Glass-Effekt** (optional): halbtransparente Optik für Dashboards mit Hintergrundbild (funktioniert mit beiden Stilen).
 - **PM2.5-Note** basiert auf einem gleitenden 24h-Mittelwert (WHO-Methodik) statt Momentanspitzen; die Kachel selbst zeigt weiterhin den aktuellen Wert.
 
 Ein Klick auf eine Metrik öffnet den Home-Assistant-Verlauf (`hass-more-info`). Details zur Notenberechnung, allen Konfigurationsoptionen und den zugrunde liegenden Quellen siehe README.

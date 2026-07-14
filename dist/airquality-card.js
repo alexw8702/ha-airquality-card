@@ -8,7 +8,8 @@ const DEFAULT_CONFIG = {
   room_max: 22,
   theme_mode: "auto",
   pm25_avg_window: 1440,
-  glass_effect: false
+  glass_effect: false,
+  card_style: "classic"
 };
 
 // Plausibilitätsprüfung für zugewiesene Sensoren: die Notenberechnung setzt physikalisch
@@ -122,6 +123,60 @@ const GLASS_OVERRIDES = {
     cardBackdropFilter: "blur(20px) saturate(150%)",
     metricBg: "rgba(255, 255, 255, 0.45)",
     metricHoverBg: "rgba(255, 255, 255, 0.65)",
+    metricBackdropFilter: "blur(10px) saturate(150%)"
+  }
+};
+
+// Farbpaletten für das Nordic Minimal-Design (Skandinavischer Look)
+const NORDIC_PALETTES = {
+  dark: {
+    cardBg: "#1c221e",
+    cardBorder: "1px solid rgba(255,255,255,0.02)",
+    cardBackdropFilter: "none",
+    cardShadow: "0 8px 30px rgba(0, 0, 0, 0.4)",
+    title: "#e5e8e3",
+    metricBg: "#252d27",
+    metricHoverBg: "#2d372f",
+    label: "#a2a8a3",
+    value: "#f3f4f6",
+    unit: "#6b7280",
+    footer: "#a2a8a3",
+    hintColor: "#a2a8a3",
+    problemColor: "#a2a8a3"
+  },
+  light: {
+    cardBg: "#ebe7dd",
+    cardBorder: "1px solid rgba(0,0,0,0.03)",
+    cardBackdropFilter: "none",
+    cardShadow: "0 8px 30px rgba(44, 53, 39, 0.08)",
+    title: "#2c3527",
+    metricBg: "#fdfdfc",
+    metricHoverBg: "#f4f4f0",
+    label: "#6b7280",
+    value: "#1f2937",
+    unit: "#9ca3af",
+    footer: "#6b7280",
+    hintColor: "#6b7280",
+    problemColor: "#6b7280"
+  }
+};
+
+// Glasmorphismus für das Nordic Minimal-Design
+const NORDIC_GLASS_OVERRIDES = {
+  dark: {
+    cardBg: "rgba(28, 34, 30, 0.55)",
+    cardBorder: "1px solid rgba(255, 255, 255, 0.08)",
+    cardBackdropFilter: "blur(20px) saturate(150%)",
+    metricBg: "rgba(37, 45, 39, 0.45)",
+    metricHoverBg: "rgba(45, 55, 47, 0.55)",
+    metricBackdropFilter: "blur(10px) saturate(150%)"
+  },
+  light: {
+    cardBg: "rgba(235, 231, 221, 0.55)",
+    cardBorder: "1px solid rgba(0, 0, 0, 0.06)",
+    cardBackdropFilter: "blur(20px) saturate(150%)",
+    metricBg: "rgba(253, 253, 252, 0.45)",
+    metricHoverBg: "rgba(253, 253, 252, 0.65)",
     metricBackdropFilter: "blur(10px) saturate(150%)"
   }
 };
@@ -584,10 +639,15 @@ class LuftqualitaetCard extends HTMLElement {
   _render() {
     if (!this._hass || !this._config) return;
 
+    const isNordic = this._config.card_style === "nordic";
     const paletteMode = this._isDarkMode() ? "dark" : "light";
-    const palette = this._config.glass_effect
-      ? { ...CARD_PALETTES[paletteMode], ...GLASS_OVERRIDES[paletteMode] }
-      : CARD_PALETTES[paletteMode];
+    const palette = isNordic
+      ? (this._config.glass_effect
+          ? { ...NORDIC_PALETTES[paletteMode], ...NORDIC_GLASS_OVERRIDES[paletteMode] }
+          : NORDIC_PALETTES[paletteMode])
+      : (this._config.glass_effect
+          ? { ...CARD_PALETTES[paletteMode], ...GLASS_OVERRIDES[paletteMode] }
+          : CARD_PALETTES[paletteMode]);
 
     const required = ["temp_entity", "humidity_entity", "co2_entity", "pm25_entity"];
     const missing = required.filter((k) => !this._config[k]);
@@ -754,15 +814,33 @@ class LuftqualitaetCard extends HTMLElement {
           display:block;
           zoom:0.9;
           background:${palette.cardBg};
-          border-radius:20px;
+          border-radius:${isNordic ? "28px" : "20px"};
           padding:18px;
-          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+          font-family:${isNordic ? "Georgia, serif" : "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif"};
           box-shadow:${palette.cardShadow};
           border:${palette.cardBorder};
           -webkit-backdrop-filter:${palette.cardBackdropFilter};
           backdrop-filter:${palette.cardBackdropFilter};
         }
-        .room-title{ text-align:center; color:${palette.title}; font-size:21px; font-weight:600; margin-bottom:6px; }
+        .room-title{
+          text-align:${isNordic ? "left" : "center"};
+          color:${palette.title};
+          font-size:${isNordic ? "24px" : "21px"};
+          font-weight:${isNordic ? "500" : "600"};
+          margin-bottom:${isNordic ? "2px" : "6px"};
+          letter-spacing:${isNordic ? "-0.5px" : "normal"};
+        }
+        .room-subtitle{
+          text-align:left;
+          font-size:12px;
+          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+          opacity:0.6;
+          margin-top:-2px;
+          margin-bottom:20px;
+          text-transform:uppercase;
+          letter-spacing:1px;
+          color:${palette.footer};
+        }
         .grade-wrap{ display:flex; justify-content:center; margin-bottom:18px; padding-top:4px; }
         .grade-outer{
           position:relative; width:206px; height:206px;
@@ -771,19 +849,45 @@ class LuftqualitaetCard extends HTMLElement {
         }
         .grade-outer:active{ transform:scale(0.98); }
         .blob-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; will-change:contents; }
-        .blob-main{ filter:drop-shadow(0 4px 12px rgba(0,0,0,0.30)); }
+        .blob-main{ filter:drop-shadow(0 4px 12px rgba(0,0,0,${isNordic ? "0.10" : "0.30"})); }
         .blob-echo{ opacity:0.20; }
         .grade-text{
           position:relative; z-index:2;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
           pointer-events:none;
         }
-        .grade-value{ font-size:54px; font-weight:700; color:#fff; line-height:1; text-shadow:0 2px 6px rgba(0,0,0,0.25); }
-        .grade-label{ font-size:15px; font-weight:500; color:rgba(255,255,255,0.95); margin-top:6px; }
-        .metrics{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .grade-value{
+          font-size:${isNordic ? "44px" : "54px"};
+          font-weight:${isNordic ? "500" : "700"};
+          color:${isNordic ? palette.title : "#fff"};
+          line-height:1;
+          text-shadow:${isNordic ? "none" : "0 2px 6px rgba(0,0,0,0.25)"};
+          font-family:${isNordic ? "Georgia, serif" : "inherit"};
+        }
+        .grade-label{
+          font-size:${isNordic ? "12px" : "15px"};
+          font-weight:600;
+          color:${isNordic ? palette.title : "rgba(255,255,255,0.95)"};
+          opacity:${isNordic ? "0.8" : "1"};
+          margin-top:6px;
+          text-transform:${isNordic ? "uppercase" : "none"};
+          letter-spacing:${isNordic ? "1.5px" : "normal"};
+          font-family:${isNordic ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
+        }
+        .metrics{
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          font-family:${isNordic ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
+        }
         .metric{
-          display:flex; align-items:center; gap:10px;
-          background:${palette.metricBg}; border-radius:14px; padding:12px;
+          display:flex;
+          flex-direction:${isNordic ? "column" : "row"};
+          align-items:${isNordic ? "stretch" : "center"};
+          gap:${isNordic ? "8px" : "10px"};
+          background:${palette.metricBg};
+          border-radius:${isNordic ? "18px" : "14px"};
+          padding:${isNordic ? "14px" : "12px"};
           cursor:pointer;
           transition:background 0.15s ease, transform 0.15s ease;
           min-width:0;
@@ -791,22 +895,50 @@ class LuftqualitaetCard extends HTMLElement {
           backdrop-filter:${palette.metricBackdropFilter || "none"};
           position:relative;
           overflow:hidden;
+          box-shadow:${isNordic ? "0 2px 8px rgba(0,0,0,0.02)" : "none"};
         }
         .metric:hover{ background:${palette.metricHoverBg}; }
         .metric:active{ transform:scale(0.98); }
         .metric > .m-icon,
-        .metric > .m-info {
+        .metric > .m-info,
+        .metric > .m-header,
+        .metric > .m-body {
           position:relative;
           z-index:1;
         }
         .m-icon{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
         .m-icon ha-icon{ --mdc-icon-size:22px; }
         .m-info{ min-width:0; overflow:hidden; }
-        .m-label{ font-size:11px; color:${palette.label}; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .m-value{ font-size:17px; font-weight:700; color:${palette.value}; white-space:nowrap; }
-        .m-value .unit{ font-size:11px; font-weight:400; color:${palette.unit}; margin-left:2px; }
+        .m-label{
+          font-size:${isNordic ? "12px" : "11px"};
+          color:${isNordic ? palette.footer : palette.label};
+          margin-bottom:2px;
+          white-space:nowrap;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          font-weight:${isNordic ? "500" : "400"};
+        }
+        .m-value{
+          font-size:${isNordic ? "20px" : "17px"};
+          font-weight:700;
+          color:${palette.value};
+          white-space:nowrap;
+          letter-spacing:${isNordic ? "-0.5px" : "normal"};
+        }
+        .m-value .unit{
+          font-size:${isNordic ? "12px" : "11px"};
+          font-weight:400;
+          color:${palette.unit};
+          margin-left:2px;
+        }
         .m-status{ font-size:11px; font-weight:500; margin-top:2px; }
-        .footer{ margin-top:16px; text-align:center; color:${palette.footer}; font-size:12px; }
+        .footer{
+          margin-top:16px;
+          text-align:center;
+          color:${palette.footer};
+          font-size:12px;
+          font-family:${isNordic ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
+        }
 
         /* PM2.5 Particle Simulation (Entire tile background) */
         .pm-particles{ position:absolute; inset:0; pointer-events:none; z-index:0; }
@@ -840,10 +972,14 @@ class LuftqualitaetCard extends HTMLElement {
         }
 
         /* Hover Animations for Icons */
-        .metric:hover .m-icon ha-icon[icon="mdi:thermometer"] { animation: temp-pulse 1.2s ease-in-out infinite alternate; }
-        .metric:hover .m-icon ha-icon[icon="mdi:water-outline"] { animation: hum-swing 1.4s ease-in-out infinite; }
-        .metric:hover .m-icon ha-icon[icon="mdi:molecule-co2"] { animation: co2-vibrate var(--co2-vib-dur) linear infinite; }
-        .metric:hover .m-icon ha-icon[icon="mdi:dots-grid"] { animation: pm-swirl 2s ease-in-out infinite; }
+        .metric:hover .m-icon ha-icon[icon="mdi:thermometer"],
+        .metric:hover .m-icon-small ha-icon[icon="mdi:thermometer"] { animation: temp-pulse 1.2s ease-in-out infinite alternate; }
+        .metric:hover .m-icon ha-icon[icon="mdi:water-outline"],
+        .metric:hover .m-icon-small ha-icon[icon="mdi:water-outline"] { animation: hum-swing 1.4s ease-in-out infinite; }
+        .metric:hover .m-icon ha-icon[icon="mdi:molecule-co2"],
+        .metric:hover .m-icon-small ha-icon[icon="mdi:molecule-co2"] { animation: co2-vibrate var(--co2-vib-dur) linear infinite; }
+        .metric:hover .m-icon ha-icon[icon="mdi:dots-grid"],
+        .metric:hover .m-icon-small ha-icon[icon="mdi:dots-grid"] { animation: pm-swirl 2s ease-in-out infinite; }
 
         @keyframes temp-pulse {
           0% { transform: translateY(0) scale(1); }
@@ -873,19 +1009,38 @@ class LuftqualitaetCard extends HTMLElement {
           .particle, .rain-drop, ha-icon { animation: none !important; }
           .metric { animation: none !important; }
         }
+
+        /* Nordic styles */
+        .m-header{ display:flex; justify-content:space-between; align-items:center; width:100%; }
+        .m-icon-small{ width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
+        .m-icon-small ha-icon{ --mdc-icon-size:18px; }
+        .m-body{ margin-top:0px; display:flex; flex-direction:column; align-items:flex-start; }
+        .m-status-badge{ font-size:9px; font-weight:700; margin-top:4px; display:inline-block; padding:2px 6px; border-radius:4px; letter-spacing:0.5px; }
       </style>
       <ha-card>
         <div class="room-title">${roomName}</div>
+        ${isNordic ? `<div class="room-subtitle">Luftgüte & Raumklima</div>` : ""}
         <div class="grade-wrap">
           <div class="grade-outer"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen">
             <svg class="blob-svg" viewBox="0 0 220 220">
               <defs>
+                ${isNordic ? `
+                <linearGradient id="grad-${gid}" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="rgb(${r},${g},${b})"/>
+                  <stop offset="100%" stop-color="rgba(${r},${g},${b},0.4)"/>
+                </linearGradient>
+                ` : `
                 <radialGradient id="grad-${gid}" cx="38%" cy="32%" r="72%">
                   <stop offset="0%" stop-color="rgb(${r},${g},${b})"/>
                   <stop offset="100%" stop-color="rgb(${dr},${dg},${db})"/>
                 </radialGradient>
+                `}
               </defs>
+              ${isNordic ? `
+              <path class="blob-echo" fill="none" stroke="${palette.title}" stroke-width="1.5" opacity="0.1" d="${this._wavePath(baseEcho, this._r.offEcho)}"></path>
+              ` : `
               <path class="blob-echo" fill="rgb(${r},${g},${b})" d="${this._wavePath(baseEcho, this._r.offEcho)}"></path>
+              `}
               <path class="blob-main" fill="url(#grad-${gid})" d="${this._wavePath(baseMain, this._r.offMain)}"></path>
             </svg>
             <div class="grade-text">
@@ -895,6 +1050,58 @@ class LuftqualitaetCard extends HTMLElement {
           </div>
         </div>
         <div class="metrics">
+          ${isNordic ? `
+          <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
+            <div class="m-header">
+              <span class="m-label">Temperatur</span>
+              <div class="m-icon-small" style="color:${tColor.color};">
+                <ha-icon icon="mdi:thermometer"></ha-icon>
+              </div>
+            </div>
+            <div class="m-body">
+              <div class="m-value">${this._fmt(temp, 1)}<span class="unit">${tempUnit}</span></div>
+              <div class="m-status-badge" style="color:${tStat.color}; background:${tStat.color}15;">${tStat.text.toUpperCase()}</div>
+            </div>
+          </div>
+          <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+            <div class="m-header">
+              <span class="m-label">CO₂-Gehalt</span>
+              <div class="m-icon-small" style="color:#66bb6a;">
+                <ha-icon icon="mdi:molecule-co2"></ha-icon>
+              </div>
+            </div>
+            <div class="m-body">
+              <div class="m-value">${this._fmt(co2, 0)}<span class="unit">${co2Unit}</span></div>
+              <div class="m-status-badge" style="color:${cStat.color}; background:${cStat.color}15;">${cStat.text.toUpperCase()}</div>
+            </div>
+          </div>
+          <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen">
+            ${rainHTML}
+            <div class="m-header">
+              <span class="m-label">Feuchtigkeit</span>
+              <div class="m-icon-small" style="color:#4fc3f7;">
+                <ha-icon icon="mdi:water-outline"></ha-icon>
+              </div>
+            </div>
+            <div class="m-body">
+              <div class="m-value">${this._fmt(hum, 0)}<span class="unit">%</span></div>
+              <div class="m-status-badge" style="color:${hStat.color}; background:${hStat.color}15;">${hStat.text.toUpperCase()}</div>
+            </div>
+          </div>
+          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
+            ${particleHTML}
+            <div class="m-header">
+              <span class="m-label">Feinstaub</span>
+              <div class="m-icon-small" style="color:#ba68c8;">
+                <ha-icon icon="mdi:dots-grid"></ha-icon>
+              </div>
+            </div>
+            <div class="m-body">
+              <div class="m-value">${this._fmt(pm25, 1)}<span class="unit">${pm25Unit}</span></div>
+              <div class="m-status-badge" style="color:${pStat.color}; background:${pStat.color}15;">${pStat.text.toUpperCase()}</div>
+            </div>
+          </div>
+          ` : `
           <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
             <div class="m-icon" style="background:${tColor.bg}; color:${tColor.color};">
               <ha-icon icon="mdi:thermometer"></ha-icon>
@@ -937,6 +1144,7 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="m-status" style="color:${pStat.color}">${pStat.text}</div>
             </div>
           </div>
+          `}
         </div>
         <div class="footer">${agoText}</div>
       </ha-card>
@@ -1023,6 +1231,18 @@ class LuftqualitaetCardEditor extends HTMLElement {
       { name: "grade_entity", selector: { entity: { domain: "sensor" } } },
       { name: "pm25_avg_window", selector: { number: { min: 5, max: 1440, step: 5, mode: "box", unit_of_measurement: "min" } } },
       {
+        name: "card_style",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "classic", label: "Klassisch (Original)" },
+              { value: "nordic", label: "Nordic Minimal / Organic" }
+            ]
+          }
+        }
+      },
+      {
         name: "theme_mode",
         selector: {
           select: {
@@ -1052,6 +1272,7 @@ class LuftqualitaetCardEditor extends HTMLElement {
       temp_tolerance: "Toleranz um Idealtemperatur",
       room_max: "Obergrenze für Außentemperatur-Korrektur",
       grade_entity: "Note-Sensor überschreiben (optional, Legacy)",
+      card_style: "Karten-Stil",
       theme_mode: "Darstellung",
       pm25_avg_window: "PM2.5-Mittelungszeitraum für die Note (WHO-Werte sind Zeit-Mittelwerte)",
       glass_effect: "Glass-Effekt (halbtransparent, für Dashboards mit Hintergrundbild)"
