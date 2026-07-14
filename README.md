@@ -94,6 +94,53 @@ Seit v0.7.0-beta.5 kann zwischen **zwölf unterschiedlichen Design-Richtungen** 
 - **Liquid Aurora (Mobiles Glas)**: Weich fließende Farbauren, die sich im Hintergrund unter einer satinierten Milchglasscheibe langsam bewegen.
 - **De Stijl / Mondrian**: Bauhaus-Ästhetik nach Piet Mondrian mit dicken schwarzen Gitterlinien und asymmetrisch eingefärbten Flächen für Sensorzustände.
 
+<details>
+<summary>📸 <b>Vorschau aller Design-Stile anzeigen (hier klicken)</b></summary>
+
+### 1. Klassisch (Original) & Cyber Glass
+| Klassisch (Dark) | Cyber Glass (Dark) |
+| --- | --- |
+| ![Klassisch](images/classic_dark.jpg) | ![Cyber Glass](images/cyber_glass.jpg) |
+
+### 2. Nordic Minimal / Organic
+| Nordic Light | Nordic Dark |
+| --- | --- |
+| ![Nordic Light](images/nordic_light.jpg) | ![Nordic Dark](images/nordic_dark.jpg) |
+
+### 3. Neo-Brutalismus (Retro)
+| Brutalism Light | Brutalism Dark |
+| --- | --- |
+| ![Brutalism Light](images/brutalism_light.jpg) | ![Brutalism Dark](images/brutalism_dark.jpg) |
+
+### 4. Minimalist Editorial (Paper)
+| Editorial Light | Editorial Dark |
+| --- | --- |
+| ![Editorial Light](images/editorial_light.jpg) | ![Editorial Dark](images/editorial_dark.jpg) |
+
+### 5. Soft UI (Neumorphismus)
+| Neumorphic Light | Neumorphic Dark |
+| --- | --- |
+| ![Neumorphic Light](images/neumorphic_light.jpg) | ![Neumorphic Dark](images/neumorphic_dark.jpg) |
+
+### 6. Swiss Grid (Minimalistisch)
+| Swiss Grid Light | Swiss Grid Dark |
+| --- | --- |
+| ![Swiss Light](images/swiss_light.jpg) | ![Swiss Dark](images/swiss_dark.jpg) |
+
+### 7. Cyberpunk (Retro-Futuristisch)
+| Cyberpunk Dark |
+| --- |
+| ![Cyberpunk Dark](images/cyberpunk_dark.jpg) |
+
+### 8. Japandi Zen (Beruhigend)
+| Japandi Light |
+| --- |
+| ![Japandi Light](images/japandi_light.jpg) |
+
+*(Die weiteren Designs Retro Arcade, Industrial Metal, Liquid Aurora und De Stijl können interaktiv in der [preview.html](preview.html) ausprobiert werden.)*
+
+</details>
+
 ### Darstellung (Hell/Dunkel)
 
 Die Karte wurde ursprünglich für ein dunkles Design entworfen und bringt seit v0.3.0 zusätzlich ein helles Pendant mit. Im Editor unter "Darstellung" wählbar:
