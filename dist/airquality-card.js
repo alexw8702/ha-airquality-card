@@ -289,6 +289,98 @@ const EDITORIAL_GLASS_OVERRIDES = {
   }
 };
 
+// Farbpaletten für Soft UI / Neumorphismus
+const NEUMORPHIC_PALETTES = {
+  dark: {
+    cardBg: "#1e222b",
+    cardBorder: "none",
+    cardBackdropFilter: "none",
+    cardShadow: "12px 12px 24px #12141a, -12px -12px 24px #2a303c",
+    title: "#edf2f7",
+    metricBg: "#1e222b",
+    metricBorder: "none",
+    metricShadow: "4px 4px 10px #12141a, -4px -4px 10px #2a303c",
+    label: "#a0aec0",
+    value: "#edf2f7",
+    unit: "#a0aec0",
+    footer: "#a0aec0",
+    hintColor: "#a0aec0",
+    problemColor: "#a0aec0"
+  },
+  light: {
+    cardBg: "#e6e9ef",
+    cardBorder: "none",
+    cardBackdropFilter: "none",
+    cardShadow: "12px 12px 24px #d1d5db, -12px -12px 24px #ffffff",
+    title: "#2d3748",
+    metricBg: "#e6e9ef",
+    metricBorder: "none",
+    metricShadow: "4px 4px 10px #d1d5db, -4px -4px 10px #ffffff",
+    label: "#718096",
+    value: "#2d3748",
+    unit: "#718096",
+    footer: "#718096",
+    hintColor: "#718096",
+    problemColor: "#718096"
+  }
+};
+
+const NEUMORPHIC_GLASS_OVERRIDES = {
+  dark: {
+    cardBg: "rgba(30, 34, 43, 0.7)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  },
+  light: {
+    cardBg: "rgba(230, 233, 239, 0.7)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  }
+};
+
+// Farbpaletten für Swiss Grid / Metro Style
+const SWISS_PALETTES = {
+  dark: {
+    cardBg: "#0b0f19",
+    cardBorder: "1px solid #1e293b",
+    cardBackdropFilter: "none",
+    cardShadow: "none",
+    title: "#f8fafc",
+    metricBg: "#0b0f19",
+    metricBorder: "1px solid #1e293b",
+    label: "#94a3b8",
+    value: "#ffffff",
+    unit: "#94a3b8",
+    footer: "#94a3b8",
+    hintColor: "#94a3b8",
+    problemColor: "#94a3b8"
+  },
+  light: {
+    cardBg: "#ffffff",
+    cardBorder: "1px solid #d1d5db",
+    cardBackdropFilter: "none",
+    cardShadow: "none",
+    title: "#000000",
+    metricBg: "#ffffff",
+    metricBorder: "1px solid #d1d5db",
+    label: "#4b5563",
+    value: "#000000",
+    unit: "#4b5563",
+    footer: "#4b5563",
+    hintColor: "#4b5563",
+    problemColor: "#4b5563"
+  }
+};
+
+const SWISS_GLASS_OVERRIDES = {
+  dark: {
+    cardBg: "rgba(11, 15, 25, 0.75)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  },
+  light: {
+    cardBg: "rgba(255, 255, 255, 0.75)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  }
+};
+
 class LuftqualitaetCard extends HTMLElement {
   constructor() {
     super();
@@ -753,6 +845,8 @@ class LuftqualitaetCard extends HTMLElement {
     const isNordic = cardStyle === "nordic";
     const isBrutalism = cardStyle === "brutalism";
     const isEditorial = cardStyle === "editorial";
+    const isNeumorphic = cardStyle === "neumorphic";
+    const isSwiss = cardStyle === "swiss";
     const paletteMode = this._isDarkMode() ? "dark" : "light";
 
     let palette;
@@ -768,6 +862,14 @@ class LuftqualitaetCard extends HTMLElement {
       palette = this._config.glass_effect
         ? { ...EDITORIAL_PALETTES[paletteMode], ...EDITORIAL_GLASS_OVERRIDES[paletteMode] }
         : EDITORIAL_PALETTES[paletteMode];
+    } else if (isNeumorphic) {
+      palette = this._config.glass_effect
+        ? { ...NEUMORPHIC_PALETTES[paletteMode], ...NEUMORPHIC_GLASS_OVERRIDES[paletteMode] }
+        : NEUMORPHIC_PALETTES[paletteMode];
+    } else if (isSwiss) {
+      palette = this._config.glass_effect
+        ? { ...SWISS_PALETTES[paletteMode], ...SWISS_GLASS_OVERRIDES[paletteMode] }
+        : SWISS_PALETTES[paletteMode];
     } else {
       palette = this._config.glass_effect
         ? { ...CARD_PALETTES[paletteMode], ...GLASS_OVERRIDES[paletteMode] }
@@ -933,33 +1035,41 @@ class LuftqualitaetCard extends HTMLElement {
     `;
 
     let borderRadius = "20px";
-    if (isNordic) borderRadius = "28px";
-    if (isBrutalism || isEditorial) borderRadius = "0px";
+    if (isNordic || isNeumorphic) borderRadius = "28px";
+    if (isBrutalism || isEditorial || isSwiss) borderRadius = "0px";
 
     let fontFamily = "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif";
     if (isNordic || isEditorial) fontFamily = "Georgia, serif";
     if (isBrutalism) fontFamily = "'Courier New', Courier, monospace";
+    if (isSwiss) fontFamily = "\"Helvetica Neue\", Helvetica, Arial, sans-serif";
 
     let cardPadding = "18px";
     if (isEditorial) cardPadding = "32px";
-    if (isBrutalism) cardPadding = "24px";
+    if (isBrutalism || isSwiss) cardPadding = "24px";
+    if (isNeumorphic) cardPadding = "28px";
 
     let titleAlign = "center";
-    if (isNordic || isBrutalism) titleAlign = "left";
+    if (isNordic || isBrutalism || isSwiss) titleAlign = "left";
 
     let titleSize = "21px";
     if (isNordic) titleSize = "24px";
     if (isBrutalism) titleSize = "20px";
     if (isEditorial) titleSize = "26px";
+    if (isNeumorphic) titleSize = "16px";
+    if (isSwiss) titleSize = "14px";
 
     let titleWeight = "600";
     if (isNordic) titleWeight = "500";
-    if (isBrutalism) titleWeight = "900";
+    if (isBrutalism || isNeumorphic || isSwiss) titleWeight = "700";
     if (isEditorial) titleWeight = "400";
 
     let titleStyle = "";
     if (isBrutalism) {
       titleStyle = `border-bottom: 3px solid ${palette.title}; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase;`;
+    } else if (isNeumorphic) {
+      titleStyle = `text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;`;
+    } else if (isSwiss) {
+      titleStyle = `text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid ${paletteMode === 'dark' ? '#1e293b' : '#d1d5db'}; padding-bottom: 8px; margin-bottom: 20px;`;
     } else {
       titleStyle = `margin-bottom: ${isNordic ? "2px" : "6px"};`;
     }
@@ -1075,6 +1185,62 @@ class LuftqualitaetCard extends HTMLElement {
           <div class="m-value" style="font-family:Georgia,serif; font-size:22px; font-weight:400; color:${palette.value}; margin-top:8px;">${this._fmt(pm25, 1)}<span class="unit" style="font-size:12px; color:${palette.unit}; font-family:sans-serif; margin-left:2px;">${pm25Unit}</span></div>
         </div>
       `;
+    } else if (isNeumorphic) {
+      metricsHTML = `
+        <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen" style="border-radius:16px; padding:14px; box-shadow:${palette.metricShadow}; display:flex; flex-direction:column; align-items:center;">
+          <span class="m-label" style="font-size:10px; font-weight:700; color:${palette.label};">Temperatur</span>
+          <div class="m-value" style="font-size:18px; font-weight:700; color:${palette.value}; margin-top:4px;">${this._fmt(temp, 1)}<span class="unit" style="color:${palette.unit}; font-size:12px;">${tempUnit}</span></div>
+          <span style="font-size:8px; font-weight:700; color:${tStat.color}; text-transform:uppercase; margin-top:2px;">● ${tStat.text}</span>
+        </div>
+        <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen" style="border-radius:16px; padding:14px; box-shadow:${palette.metricShadow}; display:flex; flex-direction:column; align-items:center;">
+          <span class="m-label" style="font-size:10px; font-weight:700; color:${palette.label};">Feuchtigkeit</span>
+          <div class="m-value" style="font-size:18px; font-weight:700; color:${palette.value}; margin-top:4px;">${this._fmt(hum, 0)}<span class="unit" style="color:${palette.unit}; font-size:12px;">%</span></div>
+          <span style="font-size:8px; font-weight:700; color:${hStat.color}; text-transform:uppercase; margin-top:2px;">● ${hStat.text}</span>
+        </div>
+        <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="border-radius:16px; padding:14px; box-shadow:${palette.metricShadow}; display:flex; flex-direction:column; align-items:center; ${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+          <span class="m-label" style="font-size:10px; font-weight:700; color:${palette.label};">CO₂</span>
+          <div class="m-value" style="font-size:18px; font-weight:700; color:${palette.value}; margin-top:4px;">${this._fmt(co2, 0)}<span class="unit" style="color:${palette.unit}; font-size:12px;">${co2Unit}</span></div>
+          <span style="font-size:8px; font-weight:700; color:${cStat.color}; text-transform:uppercase; margin-top:2px;">● ${cStat.text}</span>
+        </div>
+        <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" style="border-radius:16px; padding:14px; box-shadow:${palette.metricShadow}; display:flex; flex-direction:column; align-items:center;" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
+          ${particleHTML}
+          <span class="m-label" style="font-size:10px; font-weight:700; color:${palette.label};">PM2.5 Staub</span>
+          <div class="m-value" style="font-size:18px; font-weight:700; color:${palette.value}; margin-top:4px;">${this._fmt(pm25, 1)}<span class="unit" style="color:${palette.unit}; font-size:12px;">${pm25Unit}</span></div>
+          <span style="font-size:8px; font-weight:700; color:${pStat.color}; text-transform:uppercase; margin-top:2px;">● ${pStat.text}</span>
+        </div>
+      `;
+    } else if (isSwiss) {
+      metricsHTML = `
+        <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen" style="background:${palette.metricBg}; padding:12px; display:flex; align-items:center; gap:8px; border:${palette.metricBorder};">
+          <div style="width:4px; height:24px; background:${tStat.color}; flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:9px; text-transform:uppercase; color:${palette.label}; font-weight:700;">TEMP</div>
+            <div style="font-size:14px; font-weight:700; color:${palette.value};">${this._fmt(temp, 1)}°C</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen" style="background:${palette.metricBg}; padding:12px; display:flex; align-items:center; gap:8px; border:${palette.metricBorder};">
+          <div style="width:4px; height:24px; background:${hStat.color}; flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:9px; text-transform:uppercase; color:${palette.label}; font-weight:700;">FEUCHT</div>
+            <div style="font-size:14px; font-weight:700; color:${palette.value};">${this._fmt(hum, 0)}%</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="background:${palette.metricBg}; padding:12px; display:flex; align-items:center; gap:8px; border:${palette.metricBorder}; ${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+          <div style="width:4px; height:24px; background:${cStat.color}; flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:9px; text-transform:uppercase; color:${palette.label}; font-weight:700;">CO2</div>
+            <div style="font-size:14px; font-weight:700; color:${palette.value};">${this._fmt(co2, 0)} ppm</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" style="background:${palette.metricBg}; padding:12px; display:flex; align-items:center; gap:8px; border:${palette.metricBorder};" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
+          ${particleHTML}
+          <div style="width:4px; height:24px; background:${pStat.color}; flex-shrink:0; position:relative; z-index:1;"></div>
+          <div style="position:relative; z-index:1;">
+            <div style="font-size:9px; text-transform:uppercase; color:${palette.label}; font-weight:700;">PM2.5</div>
+            <div style="font-size:14px; font-weight:700; color:${palette.value};">${this._fmt(pm25, 1)}</div>
+          </div>
+        </div>
+      `;
     } else {
       metricsHTML = `
         <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
@@ -1122,6 +1288,22 @@ class LuftqualitaetCard extends HTMLElement {
       `;
     }
 
+    const elevated = [];
+    if (temp !== null && (tStat.text === "Mäßig" || tStat.text === "Schlecht")) elevated.push("die Temperatur");
+    if (hum !== null && (hStat.text === "Mäßig" || hStat.text === "Schlecht")) elevated.push("die Luftfeuchtigkeit");
+    if (co2 !== null && (cStat.text === "Mäßig" || cStat.text === "Schlecht")) elevated.push("der CO₂-Gehalt");
+    const pmAvg = this._pmAverageOrCurrent(this._config.pm25_entity);
+    if (pmAvg !== null && (pStat.text === "Mäßig" || pStat.text === "Schlecht")) elevated.push("die Feinstaubbelastung (PM2.5)");
+
+    let whoStatusText = "";
+    if (elevated.length === 0) {
+      whoStatusText = "Der Raum-Mittelwert entspricht den aktuellen WHO-Vorgaben.";
+    } else if (elevated.length === 1) {
+      whoStatusText = `Der Raum-Mittelwert weicht ab: ${elevated[0]} ist erhöht.`;
+    } else {
+      whoStatusText = `Der Raum-Mittelwert weicht ab: ${elevated.slice(0, -1).join(", ")} und ${elevated[elevated.length - 1]} sind erhöht.`;
+    }
+
     let gradeWrapHTML = "";
     const paletteColorStr = `rgb(${r},${g},${b})`;
     if (isBrutalism) {
@@ -1143,6 +1325,31 @@ class LuftqualitaetCard extends HTMLElement {
               <div class="grade-value">${gradeText}</div>
               <div class="grade-label">● ${gradeLabel}</div>
             </div>
+          </div>
+        </div>
+      `;
+    } else if (isNeumorphic) {
+      gradeWrapHTML = `
+        <div class="grade-wrap">
+          <div class="grade-outer neumorphic-circle"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen" style="position:relative;">
+            <div style="position:absolute; width:116px; height:116px; border-radius:50%; border:3px solid ${paletteColorStr}; opacity:0.7; box-shadow: 0 0 10px ${paletteColorStr};"></div>
+            <div class="grade-text" style="z-index:1;">
+              <div class="grade-value" style="font-size:36px; font-weight:800; color:${palette.value}; line-height:1; text-shadow:none;">${gradeText}</div>
+              <div class="grade-label" style="font-size:9px; font-weight:700; color:${palette.label}; text-transform:uppercase; margin-top:6px; letter-spacing:0.5px;">${gradeLabel}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (isSwiss) {
+      gradeWrapHTML = `
+        <div class="swiss-header" style="display:flex; align-items:center; gap:20px; margin-bottom:20px; border-bottom:1px solid ${paletteMode === 'dark' ? '#1e293b' : '#d1d5db'}; padding-bottom:20px;">
+          <div class="swiss-circle"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen" style="width:120px; height:120px; border-radius:50%; border:1px solid ${paletteMode === 'dark' ? '#1e293b' : '#d1d5db'}; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;">
+            <span style="font-size:48px; font-weight:700; letter-spacing:-1px; color:${palette.value};">${gradeText}</span>
+            <span style="font-size:9px; text-transform:uppercase; letter-spacing:1px; color:${palette.label};">Index</span>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:16px; font-weight:700; text-transform:uppercase; color:${paletteColorStr};">${gradeLabel}</div>
+            <div style="font-size:11px; color:${palette.label}; margin-top:4px; line-height:1.4;">${whoStatusText}</div>
           </div>
         </div>
       `;
@@ -1289,13 +1496,31 @@ class LuftqualitaetCard extends HTMLElement {
           font-size: 10px; font-weight: 600; color: ${paletteColorStr}; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 6px;
         }
 
+        .neumorphic-circle {
+          width: 130px; height: 130px;
+          border-radius: 50%;
+          margin: 0 auto 24px auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: ${paletteMode === 'dark' ? '#1e222b' : '#e6e9ef'};
+          box-shadow: ${paletteMode === 'dark' 
+            ? 'inset 8px 8px 16px #12141a, inset -8px -8px 16px #2a303c' 
+            : 'inset 8px 8px 16px #d1d5db, inset -8px -8px 16px #ffffff'};
+          cursor: pointer;
+        }
+        .neumorphic-circle:active { transform: scale(0.98); }
+
         .metrics{
           display:grid;
           grid-template-columns:1fr 1fr;
-          gap:${isBrutalism ? "14px" : (isEditorial ? "0px" : "10px")};
+          gap:${isBrutalism ? "14px" : (isEditorial ? "0px" : (isNeumorphic ? "16px" : (isSwiss ? "1px" : "10px")))};
           border-top:${isEditorial ? `1px solid ${paletteMode === 'dark' ? '#2d2d35' : '#e5e7eb'}` : "none"};
           border-left:${isEditorial ? `1px solid ${paletteMode === 'dark' ? '#2d2d35' : '#e5e7eb'}` : "none"};
           font-family:${isNordic || isEditorial ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
+          background:${isSwiss ? (paletteMode === 'dark' ? '#1e293b' : '#d1d5db') : "transparent"};
+          border:${isSwiss ? `1px solid ${paletteMode === 'dark' ? '#1e293b' : '#d1d5db'}` : "none"};
         }
         .metric{
           display:flex;
@@ -1534,7 +1759,9 @@ class LuftqualitaetCardEditor extends HTMLElement {
               { value: "classic", label: "Klassisch (Original)" },
               { value: "nordic", label: "Nordic Minimal / Organic" },
               { value: "brutalism", label: "Neo-Brutalism (Retro)" },
-              { value: "editorial", label: "Minimalist Editorial (Paper)" }
+              { value: "editorial", label: "Minimalist Editorial (Paper)" },
+              { value: "neumorphic", label: "Soft UI (Neumorphismus)" },
+              { value: "swiss", label: "Swiss Grid (Minimalistisch)" }
             ]
           }
         }

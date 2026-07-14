@@ -8,7 +8,7 @@ Karte über den visuellen Editor hinzufügen ("Karte hinzufügen" → "Luftquali
 
 **Weitere Features**
 - **Hell/Dunkel-Darstellung**: folgt standardmäßig automatisch der Geräte-/Systemeinstellung, alternativ fest wählbar.
-- **Vier Design-Stile**: Klassisch (Original-Cyber-Blob), **Nordic Minimal / Organic** (skandinavischer Look), **Neo-Brutalism (Retro)** (fette Linien, roher Tech-Vibe) und **Minimalist Editorial (Paper)** (Magazin-Look mit feinen Linien). Alle voll in Light & Dark.
+- **Sechs Design-Stile**: Klassisch (Original-Cyber-Blob), **Nordic Minimal** (skandinavisch), **Neo-Brutalism** (Retro), **Minimalist Editorial** (Paper), **Soft UI** (neumorphisch) und **Swiss Grid** (minimalistisches Raster). Alle voll in Light & Dark.
 - **Glass-Effekt** (optional): halbtransparente Optik für Dashboards mit Hintergrundbild (funktioniert mit allen Stilen).
 - **PM2.5-Note** basiert auf einem gleitenden 24h-Mittelwert (WHO-Methodik) statt Momentanspitzen; die Kachel selbst zeigt weiterhin den aktuellen Wert.
 
