@@ -72,7 +72,7 @@ room_max: 22
 | `temp_tolerance` | nein | `1` | Toleranzband (°C) um `temp_target`, innerhalb dessen die Temperatur als optimal gilt |
 | `room_max` | nein | `22` | Obergrenze, ab der die Außentemperatur-Korrektur greift |
 | `theme_mode` | nein | `auto` | Darstellung: `auto` (folgt der Geräte-/Browser-Einstellung, live), `light` oder `dark` |
-| `card_style` | nein | `classic` | Design-Stil der Karte: `classic` (Original-Cyber-Blob) oder `nordic` (Nordic Minimal / Organic) |
+| `card_style` | nein | `classic` | Design-Stil der Karte: `classic` (Original-Cyber-Blob), `nordic` (Nordic Minimal), `brutalism` (Neo-Brutalism) oder `editorial` (Minimalist Editorial) |
 | `pm25_avg_window` | nein | `1440` (24h) | Zeitfenster (Minuten) für den gleitenden PM2.5-Mittelwert, der in die Note einfließt — Default entspricht dem 24h-Mittelwert der WHO-Guidelines |
 | `glass_effect` | nein | `false` | Halbtransparente Glasmorphismus-Optik (Karte + Kacheln) statt deckender Hintergrundfarbe — siehe unten |
 
@@ -80,14 +80,11 @@ Ein Klick auf die Note (nur bei `grade_entity`) oder eine Metrik öffnet den Hom
 
 ### Design-Stile
 
-Seit v0.5.0 kann zwischen zwei unterschiedlichen Design-Richtungen gewählt werden:
+Seit v0.7.0 kann zwischen vier unterschiedlichen Design-Richtungen gewählt werden:
 - **Klassisch (Original)**: Das ursprüngliche, moderne Design mit dem kreisrunden, animierten, leuchtenden Gradient-Blob und Kacheln in einem schlichten Box-Look.
-- **Nordic Minimal / Organic**: Ein gemütlicher, skandinavisch inspirierter Look. Er zeichnet sich aus durch:
-  - Eine organisch geschwungene, fließende Blob-Form mit dezentem Schatten.
-  - Serif-Typografie (Georgia) für Raumbezeichnung und Hauptnote.
-  - Kacheln, die als weiche, leicht abgesetzte Karten mit minimalem Schlagschatten strukturiert sind.
-  - Integrierter Light & Dark Mode (waldgrüner/anthrazitfarbener Dark-Mode, warmer Sand-Ton im Light-Mode).
-  - Der organische Blob ändert seine Farbe weich fließend basierend auf der Luftgütenote.
+- **Nordic Minimal / Organic**: Ein gemütlicher, skandinavisch inspirierter Look. Er zeichnet sich aus durch eine organisch geschwungene, fließende Blob-Form, Serif-Typografie und Kacheln als weiche, leicht abgesetzte Karten (waldgrüner Dark-Mode, warmer Sand-Ton im Light-Mode).
+- **Neo-Brutalism (Retro)**: Ein markanter Vibe mit dicken Konturen (3px), harten Schatten (`box-shadow: 4px 4px 0px`), Monospace-Schrift und kontrastreichen Farb-Pops (im Light-Mode knallige Primärfarben, im Dark-Mode dezentere Töne mit weißem Rahmen).
+- **Minimalist Editorial (Paper)**: Ein extrem edler, luftiger Magazin-Look mit hauchdünnen Trennlinien (0.5px), feiner Serif-Typografie und minimalistischen Statuspunkten statt Icons. In Light & Dark (warmer Off-White Papierhintergrund bzw. edles Basalt-Anthrazit).
 
 ### Darstellung (Hell/Dunkel)
 

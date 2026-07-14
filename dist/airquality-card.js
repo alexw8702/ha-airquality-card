@@ -181,6 +181,114 @@ const NORDIC_GLASS_OVERRIDES = {
   }
 };
 
+// Farbpaletten für Neo-Brutalismus (Retro)
+const BRUTALISM_PALETTES = {
+  dark: {
+    cardBg: "#121212",
+    cardBorder: "3px solid #ffffff",
+    cardBackdropFilter: "none",
+    cardShadow: "6px 6px 0px #ffffff",
+    title: "#ffffff",
+    metricBorder: "3px solid #ffffff",
+    metricShadow: "4px 4px 0px #ffffff",
+    metricBg: "transparent",
+    label: "#ffffff",
+    value: "#ffffff",
+    unit: "#ffffff",
+    footer: "#ffffff",
+    hintColor: "#ffffff",
+    problemColor: "#ffffff",
+    tempBg: "#25231c",
+    humBg: "#1c251c",
+    co2Bg: "#29201a",
+    pm25Bg: "#211c29",
+    tempLabel: "#ffd633",
+    humLabel: "#8feb35",
+    co2Label: "#ff8533",
+    pm25Label: "#b880ff"
+  },
+  light: {
+    cardBg: "#ffffff",
+    cardBorder: "3px solid #000000",
+    cardBackdropFilter: "none",
+    cardShadow: "6px 6px 0px #000000",
+    title: "#000000",
+    metricBorder: "3px solid #000000",
+    metricShadow: "4px 4px 0px #000000",
+    metricBg: "transparent",
+    label: "#000000",
+    value: "#000000",
+    unit: "#000000",
+    footer: "#000000",
+    hintColor: "#000000",
+    problemColor: "#000000",
+    tempBg: "#ffe066",
+    humBg: "#a3e635",
+    co2Bg: "#ff9966",
+    pm25Bg: "#cc99ff",
+    tempLabel: "#000000",
+    humLabel: "#000000",
+    co2Label: "#000000",
+    pm25Label: "#000000"
+  }
+};
+
+const BRUTALISM_GLASS_OVERRIDES = {
+  dark: {
+    cardBg: "rgba(18, 18, 18, 0.75)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  },
+  light: {
+    cardBg: "rgba(255, 255, 255, 0.75)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  }
+};
+
+// Farbpaletten für Minimalist Editorial (Paper)
+const EDITORIAL_PALETTES = {
+  dark: {
+    cardBg: "#18181c",
+    cardBorder: "1px solid #2d2d35",
+    cardBackdropFilter: "none",
+    cardShadow: "0 4px 25px rgba(0,0,0,0.3)",
+    title: "#f3f4f6",
+    metricBg: "transparent",
+    metricBorder: "none",
+    label: "#9ca3af",
+    value: "#f3f4f6",
+    unit: "#9ca3af",
+    footer: "#9ca3af",
+    hintColor: "#9ca3af",
+    problemColor: "#9ca3af"
+  },
+  light: {
+    cardBg: "#fdfcfb",
+    cardBorder: "1px solid #e5e7eb",
+    cardBackdropFilter: "none",
+    cardShadow: "0 4px 20px rgba(0,0,0,0.02)",
+    title: "#111827",
+    metricBg: "transparent",
+    metricBorder: "none",
+    label: "#6b7280",
+    value: "#111827",
+    unit: "#6b7280",
+    footer: "#6b7280",
+    hintColor: "#6b7280",
+    problemColor: "#6b7280"
+  }
+};
+
+const EDITORIAL_GLASS_OVERRIDES = {
+  dark: {
+    cardBg: "rgba(24, 24, 28, 0.7)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  },
+  light: {
+    cardBg: "rgba(253, 252, 251, 0.7)",
+    cardBackdropFilter: "blur(20px) saturate(150%)"
+  }
+};
+
 class LuftqualitaetCard extends HTMLElement {
   constructor() {
     super();
@@ -623,7 +731,7 @@ class LuftqualitaetCard extends HTMLElement {
   }
 
   _tick(ts) {
-    if (this._paths) {
+    if (this._paths && this._paths.main && this._paths.echo) {
       const pm = ts * this._r.spdMain + this._r.offMain;
       const pe = ts * this._r.spdEcho + this._r.offEcho;
       this._paths.main.setAttribute("d", this._wavePath(this._paths.baseMain, pm));
@@ -639,15 +747,30 @@ class LuftqualitaetCard extends HTMLElement {
   _render() {
     if (!this._hass || !this._config) return;
 
-    const isNordic = this._config.card_style === "nordic";
+    const cardStyle = this._config.card_style || "classic";
+    const isNordic = cardStyle === "nordic";
+    const isBrutalism = cardStyle === "brutalism";
+    const isEditorial = cardStyle === "editorial";
     const paletteMode = this._isDarkMode() ? "dark" : "light";
-    const palette = isNordic
-      ? (this._config.glass_effect
-          ? { ...NORDIC_PALETTES[paletteMode], ...NORDIC_GLASS_OVERRIDES[paletteMode] }
-          : NORDIC_PALETTES[paletteMode])
-      : (this._config.glass_effect
-          ? { ...CARD_PALETTES[paletteMode], ...GLASS_OVERRIDES[paletteMode] }
-          : CARD_PALETTES[paletteMode]);
+
+    let palette;
+    if (isNordic) {
+      palette = this._config.glass_effect
+        ? { ...NORDIC_PALETTES[paletteMode], ...NORDIC_GLASS_OVERRIDES[paletteMode] }
+        : NORDIC_PALETTES[paletteMode];
+    } else if (isBrutalism) {
+      palette = this._config.glass_effect
+        ? { ...BRUTALISM_PALETTES[paletteMode], ...BRUTALISM_GLASS_OVERRIDES[paletteMode] }
+        : BRUTALISM_PALETTES[paletteMode];
+    } else if (isEditorial) {
+      palette = this._config.glass_effect
+        ? { ...EDITORIAL_PALETTES[paletteMode], ...EDITORIAL_GLASS_OVERRIDES[paletteMode] }
+        : EDITORIAL_PALETTES[paletteMode];
+    } else {
+      palette = this._config.glass_effect
+        ? { ...CARD_PALETTES[paletteMode], ...GLASS_OVERRIDES[paletteMode] }
+        : CARD_PALETTES[paletteMode];
+    }
 
     const required = ["temp_entity", "humidity_entity", "co2_entity", "pm25_entity"];
     const missing = required.filter((k) => !this._config[k]);
@@ -807,6 +930,254 @@ class LuftqualitaetCard extends HTMLElement {
       </div>
     `;
 
+    let borderRadius = "20px";
+    if (isNordic) borderRadius = "28px";
+    if (isBrutalism || isEditorial) borderRadius = "0px";
+
+    let fontFamily = "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif";
+    if (isNordic || isEditorial) fontFamily = "Georgia, serif";
+    if (isBrutalism) fontFamily = "'Courier New', Courier, monospace";
+
+    let cardPadding = "18px";
+    if (isEditorial) cardPadding = "32px";
+    if (isBrutalism) cardPadding = "24px";
+
+    let titleAlign = "center";
+    if (isNordic || isBrutalism) titleAlign = "left";
+
+    let titleSize = "21px";
+    if (isNordic) titleSize = "24px";
+    if (isBrutalism) titleSize = "20px";
+    if (isEditorial) titleSize = "26px";
+
+    let titleWeight = "600";
+    if (isNordic) titleWeight = "500";
+    if (isBrutalism) titleWeight = "900";
+    if (isEditorial) titleWeight = "400";
+
+    let titleStyle = "";
+    if (isBrutalism) {
+      titleStyle = `border-bottom: 3px solid ${palette.title}; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase;`;
+    } else {
+      titleStyle = `margin-bottom: ${isNordic ? "2px" : "6px"};`;
+    }
+
+    let metricsHTML = "";
+    if (isNordic) {
+      metricsHTML = `
+        <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
+          <div class="m-header">
+            <span class="m-label">Temperatur</span>
+            <div class="m-icon-small" style="color:${tColor.color};">
+              <ha-icon icon="mdi:thermometer"></ha-icon>
+            </div>
+          </div>
+          <div class="m-body">
+            <div class="m-value">${this._fmt(temp, 1)}<span class="unit">${tempUnit}</span></div>
+            <div class="m-status-badge" style="color:${tStat.color}; background:${tStat.color}15;">${tStat.text.toUpperCase()}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+          <div class="m-header">
+            <span class="m-label">CO₂-Gehalt</span>
+            <div class="m-icon-small" style="color:#66bb6a;">
+              <ha-icon icon="mdi:molecule-co2"></ha-icon>
+            </div>
+          </div>
+          <div class="m-body">
+            <div class="m-value">${this._fmt(co2, 0)}<span class="unit">${co2Unit}</span></div>
+            <div class="m-status-badge" style="color:${cStat.color}; background:${cStat.color}15;">${cStat.text.toUpperCase()}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen">
+          ${rainHTML}
+          <div class="m-header">
+            <span class="m-label">Feuchtigkeit</span>
+            <div class="m-icon-small" style="color:#4fc3f7;">
+              <ha-icon icon="mdi:water-outline"></ha-icon>
+            </div>
+          </div>
+          <div class="m-body">
+            <div class="m-value">${this._fmt(hum, 0)}<span class="unit">%</span></div>
+            <div class="m-status-badge" style="color:${hStat.color}; background:${hStat.color}15;">${hStat.text.toUpperCase()}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
+          ${particleHTML}
+          <div class="m-header">
+            <span class="m-label">Feinstaub</span>
+            <div class="m-icon-small" style="color:#ba68c8;">
+              <ha-icon icon="mdi:dots-grid"></ha-icon>
+            </div>
+          </div>
+          <div class="m-body">
+            <div class="m-value">${this._fmt(pm25, 1)}<span class="unit">${pm25Unit}</span></div>
+            <div class="m-status-badge" style="color:${pStat.color}; background:${pStat.color}15;">${pStat.text.toUpperCase()}</div>
+          </div>
+        </div>
+      `;
+    } else if (isBrutalism) {
+      metricsHTML = `
+        <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen" style="background:${palette.tempBg}; border:${palette.metricBorder}; box-shadow:${palette.metricShadow}; border-radius:0px; padding:12px; height:80px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+          <span class="m-label" style="font-size:11px; font-weight:900; text-transform:uppercase; color:${palette.tempLabel || '#000'};">TEMP</span>
+          <div class="m-body" style="display:flex; flex-direction:column; align-items:flex-start;">
+            <div class="m-value" style="font-size:18px; font-weight:900;">${this._fmt(temp, 1)}<span class="unit" style="color:${palette.unit};">${tempUnit}</span></div>
+            <div class="m-status" style="font-size:9px; font-weight:900; text-transform:uppercase; margin-top:2px; color:${tStat.color};">${tStat.text}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen" style="background:${palette.humBg}; border:${palette.metricBorder}; box-shadow:${palette.metricShadow}; border-radius:0px; padding:12px; height:80px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+          <span class="m-label" style="font-size:11px; font-weight:900; text-transform:uppercase; color:${palette.humLabel || '#000'};">HUMID</span>
+          <div class="m-body" style="display:flex; flex-direction:column; align-items:flex-start;">
+            <div class="m-value" style="font-size:18px; font-weight:900;">${this._fmt(hum, 0)}<span class="unit" style="color:${palette.unit};">%</span></div>
+            <div class="m-status" style="font-size:9px; font-weight:900; text-transform:uppercase; margin-top:2px; color:${hStat.color};">${hStat.text}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="background:${palette.co2Bg}; border:${palette.metricBorder}; box-shadow:${palette.metricShadow}; border-radius:0px; padding:12px; height:80px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box; ${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+          <span class="m-label" style="font-size:11px; font-weight:900; text-transform:uppercase; color:${palette.co2Label || '#000'};">CO2</span>
+          <div class="m-body" style="display:flex; flex-direction:column; align-items:flex-start;">
+            <div class="m-value" style="font-size:18px; font-weight:900;">${this._fmt(co2, 0)}<span class="unit" style="color:${palette.unit};">${co2Unit}</span></div>
+            <div class="m-status" style="font-size:9px; font-weight:900; text-transform:uppercase; margin-top:2px; color:${cStat.color};">${cStat.text}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" style="background:${palette.pm25Bg}; border:${palette.metricBorder}; box-shadow:${palette.metricShadow}; border-radius:0px; padding:12px; height:80px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
+          ${particleHTML}
+          <span class="m-label" style="font-size:11px; font-weight:900; text-transform:uppercase; color:${palette.pm25Label || '#000'};">PM2.5</span>
+          <div class="m-body" style="display:flex; flex-direction:column; align-items:flex-start;">
+            <div class="m-value" style="font-size:18px; font-weight:900;">${this._fmt(pm25, 1)}<span class="unit" style="color:${palette.unit};">${pm25Unit}</span></div>
+            <div class="m-status" style="font-size:9px; font-weight:900; text-transform:uppercase; margin-top:2px; color:${pStat.color};">${pStat.text}</div>
+          </div>
+        </div>
+      `;
+    } else if (isEditorial) {
+      const borderCol = paletteMode === 'dark' ? '#2d2d35' : '#e5e7eb';
+      metricsHTML = `
+        <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen" style="border-right:1px solid ${borderCol}; border-bottom:1px solid ${borderCol}; padding:16px; position:relative; background:transparent; border-radius:0; box-shadow:none; display:flex; flex-direction:column; align-items:stretch; gap:8px;">
+          <span class="m-label" style="font-size:11px; color:${palette.label}; font-weight:500; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Temperatur</span>
+          <span class="editorial-dot" style="position:absolute; top:16px; right:16px; width:6px; height:6px; border-radius:50%; background:${tStat.color};"></span>
+          <div class="m-value" style="font-family:Georgia,serif; font-size:22px; font-weight:400; color:${palette.value}; margin-top:8px;">${this._fmt(temp, 1)}<span class="unit" style="font-size:12px; color:${palette.unit}; font-family:sans-serif; margin-left:2px;">${tempUnit}</span></div>
+        </div>
+        <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen" style="border-right:1px solid ${borderCol}; border-bottom:1px solid ${borderCol}; padding:16px; position:relative; background:transparent; border-radius:0; box-shadow:none; display:flex; flex-direction:column; align-items:stretch; gap:8px;">
+          <span class="m-label" style="font-size:11px; color:${palette.label}; font-weight:500; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Luftfeuchtigkeit</span>
+          <span class="editorial-dot" style="position:absolute; top:16px; right:16px; width:6px; height:6px; border-radius:50%; background:${hStat.color};"></span>
+          <div class="m-value" style="font-family:Georgia,serif; font-size:22px; font-weight:400; color:${palette.value}; margin-top:8px;">${this._fmt(hum, 0)}<span class="unit" style="font-size:12px; color:${palette.unit}; font-family:sans-serif; margin-left:2px;">%</span></div>
+        </div>
+        <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="border-right:1px solid ${borderCol}; border-bottom:1px solid ${borderCol}; padding:16px; position:relative; background:transparent; border-radius:0; box-shadow:none; display:flex; flex-direction:column; align-items:stretch; gap:8px; ${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+          <span class="m-label" style="font-size:11px; color:${palette.label}; font-weight:500; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">CO₂-Gehalt</span>
+          <span class="editorial-dot" style="position:absolute; top:16px; right:16px; width:6px; height:6px; border-radius:50%; background:${cStat.color};"></span>
+          <div class="m-value" style="font-family:Georgia,serif; font-size:22px; font-weight:400; color:${palette.value}; margin-top:8px;">${this._fmt(co2, 0)}<span class="unit" style="font-size:12px; color:${palette.unit}; font-family:sans-serif; margin-left:2px;">${co2Unit}</span></div>
+        </div>
+        <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" style="border-right:1px solid ${borderCol}; border-bottom:1px solid ${borderCol}; padding:16px; position:relative; background:transparent; border-radius:0; box-shadow:none; display:flex; flex-direction:column; align-items:stretch; gap:8px;" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
+          ${particleHTML}
+          <span class="m-label" style="font-size:11px; color:${palette.label}; font-weight:500; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">PM2.5 Staub</span>
+          <span class="editorial-dot" style="position:absolute; top:16px; right:16px; width:6px; height:6px; border-radius:50%; background:${pStat.color};"></span>
+          <div class="m-value" style="font-family:Georgia,serif; font-size:22px; font-weight:400; color:${palette.value}; margin-top:8px;">${this._fmt(pm25, 1)}<span class="unit" style="font-size:12px; color:${palette.unit}; font-family:sans-serif; margin-left:2px;">${pm25Unit}</span></div>
+        </div>
+      `;
+    } else {
+      metricsHTML = `
+        <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
+          <div class="m-icon" style="background:${tColor.bg}; color:${tColor.color};">
+            <ha-icon icon="mdi:thermometer"></ha-icon>
+          </div>
+          <div class="m-info">
+            <div class="m-label">Temperatur</div>
+            <div class="m-value">${this._fmt(temp, 1)}<span class="unit">${tempUnit}</span></div>
+            <div class="m-status" style="color:${tStat.color}">${tStat.text}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
+          <div class="m-icon" style="background:rgba(102,187,106,0.15); color:#66bb6a;">
+            <ha-icon icon="mdi:molecule-co2"></ha-icon>
+          </div>
+          <div class="m-info">
+            <div class="m-label">CO₂</div>
+            <div class="m-value">${this._fmt(co2, 0)}<span class="unit">${co2Unit}</span></div>
+            <div class="m-status" style="color:${cStat.color}">${cStat.text}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen">
+          ${rainHTML}
+          <div class="m-icon" style="background:rgba(79,195,247,0.15); color:#4fc3f7;">
+            <ha-icon icon="mdi:water-outline"></ha-icon>
+          </div>
+          <div class="m-info">
+            <div class="m-label">Luftfeuchtigkeit</div>
+            <div class="m-value">${this._fmt(hum, 0)}<span class="unit">%</span></div>
+            <div class="m-status" style="color:${hStat.color}">${hStat.text}</div>
+          </div>
+        </div>
+        <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
+          ${particleHTML}
+          <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
+            <ha-icon icon="mdi:dots-grid"></ha-icon>
+          </div>
+          <div class="m-info">
+            <div class="m-label">PM2.5</div>
+            <div class="m-value">${this._fmt(pm25, 1)}<span class="unit">${pm25Unit}</span></div>
+            <div class="m-status" style="color:${pStat.color}">${pStat.text}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    let gradeWrapHTML = "";
+    const paletteColorStr = `rgb(${r},${g},${b})`;
+    if (isBrutalism) {
+      gradeWrapHTML = `
+        <div class="grade-wrap">
+          <div class="grade-outer brutalism-circle"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen" style="background: ${paletteColorStr};">
+            <div class="grade-text">
+              <div class="grade-value">${gradeText}</div>
+              <div class="grade-label">${gradeLabel}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (isEditorial) {
+      gradeWrapHTML = `
+        <div class="grade-wrap">
+          <div class="grade-outer editorial-circle"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen">
+            <div class="grade-text">
+              <div class="grade-value">${gradeText}</div>
+              <div class="grade-label">● ${gradeLabel}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      gradeWrapHTML = `
+        <div class="grade-wrap">
+          <div class="grade-outer"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen">
+            <svg class="blob-svg" viewBox="0 0 220 220">
+              <defs>
+                ${isNordic ? `
+                <linearGradient id="grad-${gid}" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="rgb(${r},${g},${b})"/>
+                  <stop offset="100%" stop-color="rgba(${r},${g},${b},0.4)"/>
+                </linearGradient>
+                ` : `
+                <radialGradient id="grad-${gid}" cx="38%" cy="32%" r="72%">
+                  <stop offset="0%" stop-color="rgb(${r},${g},${b})"/>
+                  <stop offset="100%" stop-color="rgb(${dr},${dg},${db})"/>
+                </radialGradient>
+                `}
+              </defs>
+              ${isNordic ? `
+              <path class="blob-echo" fill="none" stroke="${palette.title}" stroke-width="1.5" opacity="0.1" d="${this._wavePath(baseEcho, this._r.offEcho)}"></path>
+              ` : `
+              <path class="blob-echo" fill="rgb(${r},${g},${b})" d="${this._wavePath(baseEcho, this._r.offEcho)}"></path>
+              `}
+              <path class="blob-main" fill="url(#grad-${gid})" d="${this._wavePath(baseMain, this._r.offMain)}"></path>
+            </svg>
+            <div class="grade-text">
+              <div class="grade-value">${gradeText}</div>
+              <div class="grade-label">${gradeLabel}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     this.shadowRoot.innerHTML = `
       <style>
         :host { display:block; }
@@ -814,31 +1185,31 @@ class LuftqualitaetCard extends HTMLElement {
           display:block;
           zoom:0.9;
           background:${palette.cardBg};
-          border-radius:${isNordic ? "28px" : "20px"};
-          padding:18px;
-          font-family:${isNordic ? "Georgia, serif" : "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif"};
+          border-radius:${borderRadius};
+          padding:${cardPadding};
+          font-family:${fontFamily};
           box-shadow:${palette.cardShadow};
           border:${palette.cardBorder};
           -webkit-backdrop-filter:${palette.cardBackdropFilter};
           backdrop-filter:${palette.cardBackdropFilter};
         }
         .room-title{
-          text-align:${isNordic ? "left" : "center"};
+          text-align:${titleAlign};
           color:${palette.title};
-          font-size:${isNordic ? "24px" : "21px"};
-          font-weight:${isNordic ? "500" : "600"};
-          margin-bottom:${isNordic ? "2px" : "6px"};
+          font-size:${titleSize};
+          font-weight:${titleWeight};
+          ${titleStyle}
           letter-spacing:${isNordic ? "-0.5px" : "normal"};
         }
         .room-subtitle{
-          text-align:left;
+          text-align:${isEditorial ? 'center' : 'left'};
           font-size:12px;
-          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+          font-family:${isEditorial ? 'inherit' : '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif'};
           opacity:0.6;
-          margin-top:-2px;
+          margin-top:${isEditorial ? '4px' : '-2px'};
           margin-bottom:20px;
           text-transform:uppercase;
-          letter-spacing:1px;
+          letter-spacing:${isEditorial ? '2px' : '1px'};
           color:${palette.footer};
         }
         .grade-wrap{ display:flex; justify-content:center; margin-bottom:18px; padding-top:4px; }
@@ -874,11 +1245,55 @@ class LuftqualitaetCard extends HTMLElement {
           letter-spacing:${isNordic ? "1.5px" : "normal"};
           font-family:${isNordic ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
         }
+        .brutalism-circle {
+          width: 130px; height: 130px;
+          border: 3px solid ${palette.title};
+          border-radius: 50%;
+          box-shadow: 4px 4px 0px ${palette.title};
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+        .brutalism-circle:active { transform: scale(0.98); }
+        .brutalism-circle .grade-value {
+          font-size: 40px; font-weight: 900; color: #000000; line-height: 1; text-shadow: none;
+        }
+        .brutalism-circle .grade-label {
+          font-size: 10px; font-weight: 900; color: #000000; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px;
+        }
+
+        .editorial-circle {
+          width: 130px; height: 130px;
+          border: 1px solid ${paletteMode === 'dark' ? '#2d2d35' : '#e5e7eb'};
+          border-radius: 50%;
+          margin: 0 auto 24px auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: ${paletteMode === 'dark' ? '#1f1f23' : '#ffffff'};
+          box-shadow: ${paletteMode === 'dark' ? '0 2px 8px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.01)'};
+          cursor: pointer;
+        }
+        .editorial-circle:active { transform: scale(0.98); }
+        .editorial-circle .grade-value {
+          font-size: 42px; font-weight: 300; color: ${palette.value}; line-height: 1; text-shadow: none;
+          font-family: Georgia, serif;
+        }
+        .editorial-circle .grade-label {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 10px; font-weight: 600; color: ${paletteColorStr}; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 6px;
+        }
+
         .metrics{
           display:grid;
           grid-template-columns:1fr 1fr;
-          gap:10px;
-          font-family:${isNordic ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
+          gap:${isBrutalism ? "14px" : (isEditorial ? "0px" : "10px")};
+          border-top:${isEditorial ? `1px solid ${paletteMode === 'dark' ? '#2d2d35' : '#e5e7eb'}` : "none"};
+          border-left:${isEditorial ? `1px solid ${paletteMode === 'dark' ? '#2d2d35' : '#e5e7eb'}` : "none"};
+          font-family:${isNordic || isEditorial ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
         }
         .metric{
           display:flex;
@@ -937,7 +1352,7 @@ class LuftqualitaetCard extends HTMLElement {
           text-align:center;
           color:${palette.footer};
           font-size:12px;
-          font-family:${isNordic ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
+          font-family:${isNordic || isEditorial ? "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif" : "inherit"};
         }
 
         /* PM2.5 Particle Simulation (Entire tile background) */
@@ -975,25 +1390,24 @@ class LuftqualitaetCard extends HTMLElement {
         .metric:hover .m-icon ha-icon[icon="mdi:thermometer"],
         .metric:hover .m-icon-small ha-icon[icon="mdi:thermometer"] { animation: temp-pulse 1.2s ease-in-out infinite alternate; }
         .metric:hover .m-icon ha-icon[icon="mdi:water-outline"],
-        .metric:hover .m-icon-small ha-icon[icon="mdi:water-outline"] { animation: hum-swing 1.4s ease-in-out infinite; }
+        .metric:hover .m-icon-small ha-icon[icon="mdi:water-outline"] { animation: hum-bounce 0.8s ease-out infinite alternate; }
         .metric:hover .m-icon ha-icon[icon="mdi:molecule-co2"],
-        .metric:hover .m-icon-small ha-icon[icon="mdi:molecule-co2"] { animation: co2-vibrate var(--co2-vib-dur) linear infinite; }
+        .metric:hover .m-icon-small ha-icon[icon="mdi:molecule-co2"] { animation: co2-shake 0.5s linear infinite; }
         .metric:hover .m-icon ha-icon[icon="mdi:dots-grid"],
-        .metric:hover .m-icon-small ha-icon[icon="mdi:dots-grid"] { animation: pm-swirl 2s ease-in-out infinite; }
+        .metric:hover .m-icon-small ha-icon[icon="mdi:dots-grid"] { animation: pm-swirl 8s linear infinite; }
 
         @keyframes temp-pulse {
-          0% { transform: translateY(0) scale(1); }
-          100% { transform: translateY(-2px) scale(1.05); }
+          0% { transform: scale(1); }
+          100% { transform: scale(1.12); color: #f44336; }
         }
-        @keyframes hum-swing {
-          0%, 100% { transform: rotate(0deg); transform-origin: top center; }
-          30% { transform: rotate(-10deg); transform-origin: top center; }
-          70% { transform: rotate(10deg); transform-origin: top center; }
+        @keyframes hum-bounce {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-4px); }
         }
-        @keyframes co2-vibrate {
+        @keyframes co2-shake {
           0% { transform: translate(0, 0) rotate(0deg); }
-          20% { transform: translate(-1px, 0.5px) rotate(-1deg); }
-          40% { transform: translate(-0.5px, -1px) rotate(1deg); }
+          20% { transform: translate(-1px, -0.5px) rotate(-0.5deg); }
+          40% { transform: translate(-0.5px, 1px) rotate(0.5deg); }
           60% { transform: translate(1px, 0.5px) rotate(-0.5deg); }
           80% { transform: translate(0.5px, -0.5px) rotate(0.5deg); }
           100% { transform: translate(0, 0) rotate(0deg); }
@@ -1010,7 +1424,7 @@ class LuftqualitaetCard extends HTMLElement {
           .metric { animation: none !important; }
         }
 
-        /* Nordic styles */
+        /* Nordic & Editorial styles */
         .m-header{ display:flex; justify-content:space-between; align-items:center; width:100%; }
         .m-icon-small{ width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
         .m-icon-small ha-icon{ --mdc-icon-size:18px; }
@@ -1020,131 +1434,10 @@ class LuftqualitaetCard extends HTMLElement {
       <ha-card>
         <div class="room-title">${roomName}</div>
         ${isNordic ? `<div class="room-subtitle">Luftgüte & Raumklima</div>` : ""}
-        <div class="grade-wrap">
-          <div class="grade-outer"${this._config.grade_entity ? ` data-entity="${this._config.grade_entity}"` : ""} role="button" tabindex="0" aria-label="Verlauf Luftqualitätsnote öffnen">
-            <svg class="blob-svg" viewBox="0 0 220 220">
-              <defs>
-                ${isNordic ? `
-                <linearGradient id="grad-${gid}" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="rgb(${r},${g},${b})"/>
-                  <stop offset="100%" stop-color="rgba(${r},${g},${b},0.4)"/>
-                </linearGradient>
-                ` : `
-                <radialGradient id="grad-${gid}" cx="38%" cy="32%" r="72%">
-                  <stop offset="0%" stop-color="rgb(${r},${g},${b})"/>
-                  <stop offset="100%" stop-color="rgb(${dr},${dg},${db})"/>
-                </radialGradient>
-                `}
-              </defs>
-              ${isNordic ? `
-              <path class="blob-echo" fill="none" stroke="${palette.title}" stroke-width="1.5" opacity="0.1" d="${this._wavePath(baseEcho, this._r.offEcho)}"></path>
-              ` : `
-              <path class="blob-echo" fill="rgb(${r},${g},${b})" d="${this._wavePath(baseEcho, this._r.offEcho)}"></path>
-              `}
-              <path class="blob-main" fill="url(#grad-${gid})" d="${this._wavePath(baseMain, this._r.offMain)}"></path>
-            </svg>
-            <div class="grade-text">
-              <div class="grade-value">${gradeText}</div>
-              <div class="grade-label">${gradeLabel}</div>
-            </div>
-          </div>
-        </div>
+        ${isEditorial ? `<div class="room-subtitle">Luftgüte & Klima</div>` : ""}
+        ${gradeWrapHTML}
         <div class="metrics">
-          ${isNordic ? `
-          <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
-            <div class="m-header">
-              <span class="m-label">Temperatur</span>
-              <div class="m-icon-small" style="color:${tColor.color};">
-                <ha-icon icon="mdi:thermometer"></ha-icon>
-              </div>
-            </div>
-            <div class="m-body">
-              <div class="m-value">${this._fmt(temp, 1)}<span class="unit">${tempUnit}</span></div>
-              <div class="m-status-badge" style="color:${tStat.color}; background:${tStat.color}15;">${tStat.text.toUpperCase()}</div>
-            </div>
-          </div>
-          <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
-            <div class="m-header">
-              <span class="m-label">CO₂-Gehalt</span>
-              <div class="m-icon-small" style="color:#66bb6a;">
-                <ha-icon icon="mdi:molecule-co2"></ha-icon>
-              </div>
-            </div>
-            <div class="m-body">
-              <div class="m-value">${this._fmt(co2, 0)}<span class="unit">${co2Unit}</span></div>
-              <div class="m-status-badge" style="color:${cStat.color}; background:${cStat.color}15;">${cStat.text.toUpperCase()}</div>
-            </div>
-          </div>
-          <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen">
-            ${rainHTML}
-            <div class="m-header">
-              <span class="m-label">Feuchtigkeit</span>
-              <div class="m-icon-small" style="color:#4fc3f7;">
-                <ha-icon icon="mdi:water-outline"></ha-icon>
-              </div>
-            </div>
-            <div class="m-body">
-              <div class="m-value">${this._fmt(hum, 0)}<span class="unit">%</span></div>
-              <div class="m-status-badge" style="color:${hStat.color}; background:${hStat.color}15;">${hStat.text.toUpperCase()}</div>
-            </div>
-          </div>
-          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert.">
-            ${particleHTML}
-            <div class="m-header">
-              <span class="m-label">Feinstaub</span>
-              <div class="m-icon-small" style="color:#ba68c8;">
-                <ha-icon icon="mdi:dots-grid"></ha-icon>
-              </div>
-            </div>
-            <div class="m-body">
-              <div class="m-value">${this._fmt(pm25, 1)}<span class="unit">${pm25Unit}</span></div>
-              <div class="m-status-badge" style="color:${pStat.color}; background:${pStat.color}15;">${pStat.text.toUpperCase()}</div>
-            </div>
-          </div>
-          ` : `
-          <div class="metric" data-entity="${this._config.temp_entity}" role="button" tabindex="0" aria-label="Verlauf Temperatur öffnen">
-            <div class="m-icon" style="background:${tColor.bg}; color:${tColor.color};">
-              <ha-icon icon="mdi:thermometer"></ha-icon>
-            </div>
-            <div class="m-info">
-              <div class="m-label">Temperatur</div>
-              <div class="m-value">${this._fmt(temp, 1)}<span class="unit">${tempUnit}</span></div>
-              <div class="m-status" style="color:${tStat.color}">${tStat.text}</div>
-            </div>
-          </div>
-          <div class="metric" data-entity="${this._config.co2_entity}" role="button" tabindex="0" aria-label="Verlauf CO₂ öffnen" style="${co2GlowStyle} --co2-vib-dur: ${co2VibDuration};">
-            <div class="m-icon" style="background:rgba(102,187,106,0.15); color:#66bb6a;">
-              <ha-icon icon="mdi:molecule-co2"></ha-icon>
-            </div>
-            <div class="m-info">
-              <div class="m-label">CO₂</div>
-              <div class="m-value">${this._fmt(co2, 0)}<span class="unit">${co2Unit}</span></div>
-              <div class="m-status" style="color:${cStat.color}">${cStat.text}</div>
-            </div>
-          </div>
-          <div class="metric" data-entity="${this._config.humidity_entity}" role="button" tabindex="0" aria-label="Verlauf Luftfeuchtigkeit öffnen">
-            ${rainHTML}
-            <div class="m-icon" style="background:rgba(79,195,247,0.15); color:#4fc3f7;">
-              <ha-icon icon="mdi:water-outline"></ha-icon>
-            </div>
-            <div class="m-info">
-              <div class="m-label">Luftfeuchtigkeit</div>
-              <div class="m-value">${this._fmt(hum, 0)}<span class="unit">%</span></div>
-              <div class="m-status" style="color:${hStat.color}">${hStat.text}</div>
-            </div>
-          </div>
-          <div class="metric" data-entity="${this._config.pm25_entity}" role="button" tabindex="0" aria-label="Verlauf PM2.5 öffnen" title="Zahl = aktueller Momentanwert. Status/Farbe basieren wie die Note auf einem ${Number.isFinite(this._config.pm25_avg_window) ? this._config.pm25_avg_window : DEFAULT_CONFIG.pm25_avg_window}-Minuten-Mittelwert (WHO-Richtwerte sind als 24h-Mittelwert definiert).">
-            ${particleHTML}
-            <div class="m-icon" style="background:rgba(186,104,200,0.15); color:#ba68c8;">
-              <ha-icon icon="mdi:dots-grid"></ha-icon>
-            </div>
-            <div class="m-info">
-              <div class="m-label">PM2.5</div>
-              <div class="m-value">${this._fmt(pm25, 1)}<span class="unit">${pm25Unit}</span></div>
-              <div class="m-status" style="color:${pStat.color}">${pStat.text}</div>
-            </div>
-          </div>
-          `}
+          ${metricsHTML}
         </div>
         <div class="footer">${agoText}</div>
       </ha-card>
@@ -1237,7 +1530,9 @@ class LuftqualitaetCardEditor extends HTMLElement {
             mode: "dropdown",
             options: [
               { value: "classic", label: "Klassisch (Original)" },
-              { value: "nordic", label: "Nordic Minimal / Organic" }
+              { value: "nordic", label: "Nordic Minimal / Organic" },
+              { value: "brutalism", label: "Neo-Brutalism (Retro)" },
+              { value: "editorial", label: "Minimalist Editorial (Paper)" }
             ]
           }
         }
