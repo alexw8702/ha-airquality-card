@@ -297,9 +297,20 @@
       const cStat = getStatusInfo('co2', co2Val);
       const pStat = getStatusInfo('pm25', pmVal);
 
-      const whoStatusText = grade <= 2.5 
-        ? "Der Raum-Mittelwert entspricht den aktuellen WHO-Vorgaben." 
-        : "Einige Werte überschreiten die empfohlenen WHO-Vorgaben!";
+      const elevated = [];
+      if (tempVal < 20 || tempVal > 23) elevated.push("die Temperatur");
+      if (humVal < 40 || humVal > 60) elevated.push("die Luftfeuchtigkeit");
+      if (co2Val > 800) elevated.push("der CO₂-Gehalt");
+      if (pmVal > 5) elevated.push("die Feinstaubbelastung (PM2.5)");
+
+      let whoStatusText = "";
+      if (elevated.length === 0) {
+        whoStatusText = "Der Raum-Mittelwert entspricht den aktuellen WHO-Vorgaben.";
+      } else if (elevated.length === 1) {
+        whoStatusText = `Der Raum-Mittelwert weicht ab: ${elevated[0]} ist erhöht.`;
+      } else {
+        whoStatusText = `Der Raum-Mittelwert weicht ab: ${elevated.slice(0, -1).join(", ")} und ${elevated[elevated.length - 1]} sind erhöht.`;
+      }
 
       // 1. Soft UI Light
       document.getElementById('wrapper-neuomorphic-light').innerHTML = `
