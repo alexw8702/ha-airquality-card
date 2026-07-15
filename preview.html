@@ -96,7 +96,7 @@
     /* Showcase Grid */
     .showcase {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
       gap: 50px;
       flex: 1;
       width: 100%;
@@ -121,29 +121,41 @@
       z-index: 10;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-
-    /* Floating Memphis Animations */
-    @keyframes memphis-spin {
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes memphis-bounce {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(8px); }
-    }
-
-    /* Liquid Aurora Animations */
-    @keyframes aurora-bg {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    
+    luftqualitaet-card {
+      width: 320px;
+      display: block;
     }
   </style>
+  <script>
+    // Define mock custom elements before loading the card bundle
+    customElements.define('ha-card', class extends HTMLElement {
+      connectedCallback() {
+        this.style.display = 'block';
+      }
+    });
+
+    customElements.define('ha-icon', class extends HTMLElement {
+      connectedCallback() {
+        const icon = this.getAttribute('icon') || '';
+        let inner = '';
+        if (icon.includes('thermometer')) inner = '🌡️';
+        else if (icon.includes('water')) inner = '💧';
+        else if (icon.includes('molecule-co2')) inner = '💨';
+        else if (icon.includes('dots-grid')) inner = '🌫️';
+        else if (icon.includes('clock')) inner = '🕒';
+        this.innerHTML = `<span style="font-size: 18px; line-height: 1; display: inline-block; vertical-align: middle;">${inner}</span>`;
+      }
+    });
+  </script>
+  <!-- Load the actual live Javascript card element -->
+  <script src="dist/airquality-card.js"></script>
 </head>
 <body>
 
   <header>
     <h1>ha-airquality-card</h1>
-    <p>Interaktiver Playground: 6 neue Design Vorschläge (1 bis 6, jeweils Light & Dark)</p>
+    <p>Interaktiver Playground: 6 neue Design Vorschläge (1 bis 6, jeweils Light & Dark) - LIVE</p>
   </header>
 
   <div class="container">
@@ -170,178 +182,107 @@
 
     <!-- Showcase Grid -->
     <div class="showcase">
-      <!-- 1. Cyberpunk Light -->
+      <!-- 1. Bauhaus -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#dfff60; color:#000;">Vorschlag 1: Cyberpunk Light (Animated)</span>
-        <div id="w-cyber-light"></div>
+        <span class="variant-badge" style="background:#E6DFD3; color:#1A1A1A; border: 1px solid #1A1A1A;">Vorschlag 1: Bauhaus Light</span>
+        <div style="background:#F3EFE0; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-bauhaus-light"></luftqualitaet-card>
+        </div>
+      </div>
+      <div class="variant-card">
+        <span class="variant-badge" style="background:#121212; color:#E6DFD3; border: 1px solid #E6DFD3;">Vorschlag 1: Bauhaus Dark</span>
+        <div style="background:#121212; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-bauhaus-dark"></luftqualitaet-card>
+        </div>
       </div>
 
-      <!-- 1. Cyberpunk Dark -->
+      <!-- 2. Solarized Terminal -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#bd00ff; color:#fff;">Vorschlag 1: Cyberpunk Dark (Animated)</span>
-        <div id="w-cyber-dark"></div>
+        <span class="variant-badge" style="background:#586E75; color:#FDF6E3;">Vorschlag 2: Solarized Terminal Light</span>
+        <div style="background:#FDF6E3; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-solar-light"></luftqualitaet-card>
+        </div>
+      </div>
+      <div class="variant-card">
+        <span class="variant-badge" style="background:#002B36; color:#93A1A1; border: 1px solid #586E75;">Vorschlag 2: Solarized Terminal Dark</span>
+        <div style="background:#002B36; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-solar-dark"></luftqualitaet-card>
+        </div>
       </div>
 
-      <!-- 2. Japandi Light -->
+      <!-- 3. Claymorphism -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#ebe7dd; color:#4a453f;">Vorschlag 2: Japandi Zen Light</span>
-        <div id="w-japandi-light"></div>
+        <span class="variant-badge" style="background:#2C3E50; color:#fff;">Vorschlag 3: Claymorphism Light</span>
+        <div style="background:#E5ECF4; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-clay-light"></luftqualitaet-card>
+        </div>
+      </div>
+      <div class="variant-card">
+        <span class="variant-badge" style="background:#12131C; color:#C5C6C7; border: 1px solid #C5C6C7;">Vorschlag 3: Claymorphism Dark</span>
+        <div style="background:#12131C; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-clay-dark"></luftqualitaet-card>
+        </div>
       </div>
 
-      <!-- 2. Japandi Dark -->
+      <!-- 4. Biophilic Leaf -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#222521; color:#fff;">Vorschlag 2: Japandi Zen Dark</span>
-        <div id="w-japandi-dark"></div>
+        <span class="variant-badge" style="background:#5B8C5A; color:#fff;">Vorschlag 4: Biophilic Leaf Light</span>
+        <div style="background:#F4F7F2; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-organic-light"></luftqualitaet-card>
+        </div>
+      </div>
+      <div class="variant-card">
+        <span class="variant-badge" style="background:#0F1511; color:#DCE2D6; border: 1px solid rgba(57,255,20,0.2);">Vorschlag 4: Biophilic Leaf Dark</span>
+        <div style="background:#0F1511; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-organic-dark"></luftqualitaet-card>
+        </div>
       </div>
 
-      <!-- 3. Retro Arcade Light -->
+      <!-- 5. Vaporwave Grid -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#ffd200; color:#000;">Vorschlag 3: Retro Arcade Light (Animated)</span>
-        <div id="w-arcade-light"></div>
+        <span class="variant-badge" style="background:#FF69B4; color:#fff;">Vorschlag 5: Vaporwave Light</span>
+        <div style="background:#FFEBF2; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-vapor-light"></luftqualitaet-card>
+        </div>
+      </div>
+      <div class="variant-card">
+        <span class="variant-badge" style="background:#FF007F; color:#00F0FF; border:1px solid #FF007F;">Vorschlag 5: Vaporwave Dark</span>
+        <div style="background:#1A0B2E; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-vapor-dark"></luftqualitaet-card>
+        </div>
       </div>
 
-      <!-- 3. Retro Arcade Dark -->
+      <!-- 6. Monolith -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#0c0728; color:#00f6ff; border: 1px solid #00f6ff;">Vorschlag 3: Retro Arcade Dark (Animated)</span>
-        <div id="w-arcade-dark"></div>
+        <span class="variant-badge" style="background:#CCCCCC; color:#000;">Vorschlag 6: Monolith Light</span>
+        <div style="background:#E8E8E8; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-monolith-light"></luftqualitaet-card>
+        </div>
       </div>
-
-      <!-- 4. Brushed Metal Light -->
       <div class="variant-card">
-        <span class="variant-badge" style="background:#d8dcdb; color:#333;">Vorschlag 4: Industrial Metal Light</span>
-        <div id="w-metal-light"></div>
-      </div>
-
-      <!-- 4. Brushed Metal Dark -->
-      <div class="variant-card">
-        <span class="variant-badge" style="background:#282b30; color:#ff8d00;">Vorschlag 4: Industrial Steel Dark</span>
-        <div id="w-metal-dark"></div>
-      </div>
-
-      <!-- 5. Glassmorphism Pro Light -->
-      <div class="variant-card">
-        <span class="variant-badge" style="background:#ffb7b2; color:#000;">Vorschlag 5: Liquid Aurora Light (Animated)</span>
-        <div id="w-glass-light"></div>
-      </div>
-
-      <!-- 5. Glassmorphism Pro Dark -->
-      <div class="variant-card">
-        <span class="variant-badge" style="background:#9d4edd;">Vorschlag 5: Liquid Aurora Dark (Animated)</span>
-        <div id="w-glass-dark"></div>
-      </div>
-
-      <!-- 6. De Stijl Light -->
-      <div class="variant-card">
-        <span class="variant-badge" style="background:#e63946; color:#fff;">Vorschlag 6: De Stijl Light</span>
-        <div id="w-stijl-light"></div>
-      </div>
-
-      <!-- 6. De Stijl Dark -->
-      <div class="variant-card">
-        <span class="variant-badge" style="background:#121212; color:#fff; border: 1px solid #555;">Vorschlag 6: De Stijl Dark</span>
-        <div id="w-stijl-dark"></div>
+        <span class="variant-badge" style="background:#222; color:#fff; border: 1px solid #555;">Vorschlag 6: Monolith Dark</span>
+        <div style="background:#0A0A0A; padding:20px; display:flex; justify-content:center; align-items:center; min-height:280px; box-sizing:border-box;">
+          <luftqualitaet-card id="card-monolith-dark"></luftqualitaet-card>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    function co2Norm(v) {
-      if (v <= 420) return 0.75;
-      if (v < 800) return 0.75 + (v - 420) / 380 * 0.75;
-      if (v < 1000) return 1.5 + (v - 800) / 200 * 1.0;
-      if (v < 1400) return 2.5 + (v - 1000) / 400 * 1.0;
-      if (v < 2000) return 3.5 + (v - 1400) / 600 * 1.0;
-      return 5;
-    }
-
-    function pmNorm(v) {
-      if (v <= 1) return 0.75;
-      if (v <= 5) return 0.75 + (v - 1) / 4 * 0.75;
-      if (v <= 15) return 1.5 + (v - 5) / 10 * 1.0;
-      if (v <= 25) return 2.5 + (v - 15) / 10 * 1.0;
-      if (v <= 50) return 3.5 + (v - 25) / 25 * 1.0;
-      return 5;
-    }
-
-    function rhNorm(v) {
-      const d = Math.abs(v - 50);
-      if (d <= 10) return 0.75 + d / 10 * 0.75;
-      if (d <= 25) return 1.5 + (d - 10) / 15 * 1.0;
-      if (d <= 35) return 2.5 + (d - 25) / 10 * 1.0;
-      if (d <= 45) return 3.5 + (d - 35) / 10 * 1.0;
-      return 5;
-    }
-
-    function tempNorm(v, mid, half) {
-      const d = Math.abs(v - mid);
-      const safeHalf = half > 0 ? half : 0.01;
-      if (d <= safeHalf) return 0.75 + (d / safeHalf) * 0.75;
-      if (d <= safeHalf + 4) return 1.5 + (d - safeHalf) / 4 * 3.5;
-      return 5;
-    }
-
-    function computeGrade(temp, hum, co2, pm25) {
-      const co2N = co2Norm(co2);
-      const pmN = pmNorm(pm25);
-      const rhN = rhNorm(hum);
-      const tN = tempNorm(temp, 21, 1);
-      
-      const wavg = co2N * 0.3 + pmN * 0.1 + rhN * 0.3 + tN * 0.3;
-      const worst = Math.max(co2N, rhN, tN);
-      return Math.round((0.6 * worst + 0.4 * wavg) * 10) / 10;
-    }
-
-    function getGradeColor(value) {
-      const stops = [
-        [1, [76, 175, 80]],
-        [2, [139, 195, 74]],
-        [3, [255, 193, 7]],
-        [4, [255, 111, 0]],
-        [5, [211, 47, 47]]
-      ];
-      const v = Math.min(5, Math.max(1, value));
-      for (let i = 0; i < stops.length - 1; i++) {
-        const p1 = stops[i][0], c1 = stops[i][1];
-        const p2 = stops[i + 1][0], c2 = stops[i + 1][1];
-        if (v >= p1 && v <= p2) {
-          const t = (v - p1) / (p2 - p1);
-          return c1.map((c, idx) => Math.round(c + (c2[idx] - c) * t));
-        }
-      }
-      return stops[stops.length - 1][1];
-    }
-
-    function getGradeLabel(value) {
-      if (value <= 1.5) return "Sehr gut";
-      if (value <= 2.5) return "Gut";
-      if (value <= 3.5) return "Befriedigend";
-      if (value <= 4.5) return "Schwach";
-      return "Schlecht";
-    }
-
-    function getStatusInfo(type, val) {
-      if (type === 'temp') {
-        if (val >= 20 && val <= 23) return { text: "Optimal", color: "#2e7d32" };
-        if (val >= 18 && val <= 25) return { text: "Gut", color: "#2e7d32" };
-        if (val >= 16 && val <= 27) return { text: "Mäßig", color: "#ed6c02" };
-        return { text: "Schlecht", color: "#d32f2f" };
-      }
-      if (type === 'hum') {
-        if (val >= 40 && val <= 60) return { text: "Gut", color: "#2e7d32" };
-        if (val >= 30 && val <= 70) return { text: "Mäßig", color: "#ed6c02" };
-        return { text: "Schlecht", color: "#d32f2f" };
-      }
-      if (type === 'co2') {
-        if (val <= 800) return { text: "Gut", color: "#2e7d32" };
-        if (val <= 1200) return { text: "Mäßig", color: "#ed6c02" };
-        return { text: "Schlecht", color: "#d32f2f" };
-      }
-      if (type === 'pm25') {
-        if (val <= 5) return { text: "Gut", color: "#2e7d32" };
-        if (val <= 15) return { text: "Mäßig", color: "#ed6c02" };
-        return { text: "Schlecht", color: "#d32f2f" };
-      }
-    }
+    const cardVariants = [
+      { id: "card-bauhaus-light", style: "bauhaus", theme: "light" },
+      { id: "card-bauhaus-dark", style: "bauhaus", theme: "dark" },
+      { id: "card-solar-light", style: "solar", theme: "light" },
+      { id: "card-solar-dark", style: "solar", theme: "dark" },
+      { id: "card-clay-light", style: "clay", theme: "light" },
+      { id: "card-clay-dark", style: "clay", theme: "dark" },
+      { id: "card-organic-light", style: "organic", theme: "light" },
+      { id: "card-organic-dark", style: "organic", theme: "dark" },
+      { id: "card-vapor-light", style: "vapor", theme: "light" },
+      { id: "card-vapor-dark", style: "vapor", theme: "dark" },
+      { id: "card-monolith-light", style: "monolith", theme: "light" },
+      { id: "card-monolith-dark", style: "monolith", theme: "dark" }
+    ];
 
     function updateAll() {
       const tempVal = parseFloat(document.getElementById('slider-temp').value);
@@ -354,541 +295,29 @@
       document.getElementById('val-co2').innerText = `${co2Val} ppm`;
       document.getElementById('val-pm25').innerText = `${pmVal.toFixed(1)} µg/m³`;
 
-      const grade = computeGrade(tempVal, humVal, co2Val, pmVal);
-      const gradeCol = getGradeColor(grade);
-      const gradeColorStr = `rgb(${gradeCol[0]}, ${gradeCol[1]}, ${gradeCol[2]})`;
-      const gradeLabel = getGradeLabel(grade);
-
-      const tStat = getStatusInfo('temp', tempVal);
-      const hStat = getStatusInfo('hum', humVal);
-      const cStat = getStatusInfo('co2', co2Val);
-      const pStat = getStatusInfo('pm25', pmVal);
-
-      // 1. Cyberpunk Light
-      document.getElementById('w-cyber-light').innerHTML = `
-        <div style="background:#dfff60; border:2px solid #000; box-shadow:5px 5px 0px #000; padding:24px; color:#000; font-family:'Courier New', monospace; position:relative; overflow:hidden;">
-          <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(rgba(0,0,0,0.03) 50%, rgba(0,0,0,0) 50%), linear-gradient(90deg, rgba(0,0,0,0.03) 50%, rgba(0,0,0,0) 50%); background-size:4px 4px; pointer-events:none;"></div>
-          <div style="font-size:16px; font-weight:900; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:20px; display:flex; justify-content:between;">
-            <span>AQS v3.1 // SEC_7G</span>
-            <span style="animation: flash 1s steps(2, start) infinite; margin-left:auto;">● LIVE</span>
-          </div>
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <div style="width:130px; height:130px; border:2px solid #000; border-radius:50%; background:#fff; box-shadow:3px 3px 0px #000; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
-              <span style="font-size:38px; font-weight:900; line-height:1;">${grade.toFixed(1)}</span>
-              <span style="font-size:10px; font-weight:900; text-transform:uppercase; margin-top:4px;">${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:#fff; border:2px solid #000; box-shadow:3px 3px 0px #000; padding:10px;">
-              <div style="font-size:10px; font-weight:900;">TEMP</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#fff; border:2px solid #000; box-shadow:3px 3px 0px #000; padding:10px;">
-              <div style="font-size:10px; font-weight:900;">HUMID</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px;">${humVal}%</div>
-            </div>
-            <div style="background:#fff; border:2px solid #000; box-shadow:3px 3px 0px #000; padding:10px;">
-              <div style="font-size:10px; font-weight:900;">CO2</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px;">${co2Val} ppm</div>
-            </div>
-            <div style="background:#fff; border:2px solid #000; box-shadow:3px 3px 0px #000; padding:10px;">
-              <div style="font-size:10px; font-weight:900;">PM2.5</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 1. Cyberpunk Dark
-      document.getElementById('w-cyber-dark').innerHTML = `
-        <div style="background:#09090c; border:2px solid #bd00ff; box-shadow:0 0 15px rgba(189,0,255,0.4); padding:24px; color:#00f6ff; font-family:'Courier New', monospace; position:relative; overflow:hidden;">
-          <style>
-            @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-          </style>
-          <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(rgba(255,255,255,0.015) 50%, rgba(0,0,0,0) 50%), linear-gradient(90deg, rgba(255,255,255,0.015) 50%, rgba(0,0,0,0) 50%); background-size:4px 4px; pointer-events:none;"></div>
-          <div style="font-size:16px; font-weight:900; border-bottom:2px solid #bd00ff; padding-bottom:8px; margin-bottom:20px; display:flex; justify-content:between; color:#bd00ff;">
-            <span>AQS v3.1 // SEC_7G</span>
-            <span style="animation: flash 1s steps(2, start) infinite; margin-left:auto; color:#ff007f;">● LIVE</span>
-          </div>
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <div style="width:130px; height:130px; border:2px solid #00f6ff; border-radius:50%; background:#12121e; box-shadow:0 0 15px rgba(0,246,255,0.2); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
-              <!-- Glowing air quality indicator ring -->
-              <div style="position:absolute; width:118px; height:118px; border-radius:50%; border:2px solid ${gradeColorStr}; box-shadow: 0 0 10px ${gradeColorStr};"></div>
-              <span style="font-size:38px; font-weight:900; line-height:1; color:#fff; text-shadow:0 0 8px #fff;">${grade.toFixed(1)}</span>
-              <span style="font-size:10px; font-weight:900; text-transform:uppercase; margin-top:4px; color:#bd00ff; text-shadow:0 0 4px #bd00ff;">${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:#12121e; border:1px solid #bd00ff; padding:10px; box-shadow:inset 0 0 5px rgba(189,0,255,0.2);">
-              <div style="font-size:10px; font-weight:900; color:#bd00ff;">TEMP</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px; color:#fff;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#12121e; border:1px solid #bd00ff; padding:10px; box-shadow:inset 0 0 5px rgba(189,0,255,0.2);">
-              <div style="font-size:10px; font-weight:900; color:#bd00ff;">HUMID</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px; color:#fff;">${humVal}%</div>
-            </div>
-            <div style="background:#12121e; border:1px solid #bd00ff; padding:10px; box-shadow:inset 0 0 5px rgba(189,0,255,0.2);">
-              <div style="font-size:10px; font-weight:900; color:#bd00ff;">CO2</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px; color:#fff;">${co2Val} ppm</div>
-            </div>
-            <div style="background:#12121e; border:1px solid #bd00ff; padding:10px; box-shadow:inset 0 0 5px rgba(189,0,255,0.2);">
-              <div style="font-size:10px; font-weight:900; color:#bd00ff;">PM2.5</div>
-              <div style="font-size:16px; font-weight:900; margin-top:4px; color:#fff;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 2. Japandi Zen Light
-      document.getElementById('w-japandi-light').innerHTML = `
-        <div style="background:#f5f2eb; border-radius:24px; padding:28px; color:#4a453f; font-family:-apple-system, BlinkMacSystemFont, sans-serif; box-shadow:0 10px 30px rgba(74,69,63,0.05); border:1px solid rgba(0,0,0,0.03);">
-          <div style="font-size:15px; font-weight:500; text-align:center; letter-spacing:1px; text-transform:uppercase; opacity:0.8; margin-bottom:24px;">Wohnzimmer</div>
-          <div style="display:flex; justify-content:center; margin-bottom:28px;">
-            <!-- Pebble shaped central display -->
-            <div style="
-              width:140px; height:120px;
-              background:#ebdcd0;
-              border-radius:60% 40% 50% 50% / 40% 50% 50% 60%;
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-              box-shadow:inset -6px -6px 12px rgba(0,0,0,0.03), 4px 8px 16px rgba(74,69,63,0.04);
-            ">
-              <span style="font-size:38px; font-weight:300; line-height:1; font-family:Georgia, serif;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; text-transform:uppercase; letter-spacing:1px; margin-top:6px; font-weight:600; color:${gradeColorStr};">● ${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div style="background:#fdfcfb; border-radius:20px; padding:16px; border:1px solid rgba(0,0,0,0.02); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6;">Temperatur</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#fdfcfb; border-radius:20px; padding:16px; border:1px solid rgba(0,0,0,0.02); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6;">Feuchtigkeit</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px;">${humVal}%</div>
-            </div>
-            <div style="background:#fdfcfb; border-radius:20px; padding:16px; border:1px solid rgba(0,0,0,0.02); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6;">CO₂-Gehalt</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px;">${co2Val} ppm</div>
-            </div>
-            <div style="background:#fdfcfb; border-radius:20px; padding:16px; border:1px solid rgba(0,0,0,0.02); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6;">Feinstaub</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 2. Japandi Zen Dark
-      document.getElementById('w-japandi-dark').innerHTML = `
-        <div style="background:#1f221d; border-radius:24px; padding:28px; color:#e3e7e2; font-family:-apple-system, BlinkMacSystemFont, sans-serif; box-shadow:0 10px 30px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.01);">
-          <div style="font-size:15px; font-weight:500; text-align:center; letter-spacing:1px; text-transform:uppercase; opacity:0.8; margin-bottom:24px; color:#a3aba0;">Wohnzimmer</div>
-          <div style="display:flex; justify-content:center; margin-bottom:28px;">
-            <!-- Pebble shaped central display -->
-            <div style="
-              width:140px; height:120px;
-              background:#2f342d;
-              border-radius:55% 45% 52% 48% / 45% 55% 48% 52%;
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-              box-shadow:inset -6px -6px 12px rgba(0,0,0,0.1), 4px 8px 16px rgba(0,0,0,0.2);
-            ">
-              <span style="font-size:38px; font-weight:300; line-height:1; font-family:Georgia, serif; color:#fff;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; text-transform:uppercase; letter-spacing:1px; margin-top:6px; font-weight:600; color:${gradeColorStr};">● ${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div style="background:#262a24; border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,0.01); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6; color:#a3aba0;">Temperatur</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px; color:#fff;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#262a24; border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,0.01); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6; color:#a3aba0;">Feuchtigkeit</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px; color:#fff;">${humVal}%</div>
-            </div>
-            <div style="background:#262a24; border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,0.01); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6; color:#a3aba0;">CO₂-Gehalt</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px; color:#fff;">${co2Val} ppm</div>
-            </div>
-            <div style="background:#262a24; border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,0.01); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6; color:#a3aba0;">Feinstaub</span>
-              <div style="font-size:17px; font-weight:500; margin-top:6px; color:#fff;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 3. Retro Arcade Light
-      document.getElementById('w-arcade-light').innerHTML = `
-        <div style="background:#ffd200; border:4px solid #000; image-rendering:pixelated; padding:24px; color:#000; font-family:'Courier New', monospace; box-shadow:8px 8px 0px #000; position:relative; overflow:hidden;">
-          <div style="font-size:14px; font-weight:900; border-bottom:4px solid #000; padding-bottom:8px; margin-bottom:20px; text-align:center; text-transform:uppercase; letter-spacing:1px;">
-            ♥ AIR MONITOR ♥
-          </div>
-          
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <div style="width:120px; height:120px; border:4px solid #000; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:4px 4px 0px #000; position:relative;">
-              <span style="font-size:42px; font-weight:900; line-height:1;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; font-weight:900; text-transform:uppercase; margin-top:8px; background:${gradeColorStr}; color:#fff; padding:2px 6px; border:2px solid #000;">${gradeLabel}</span>
-            </div>
-          </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:#fff; border:4px solid #000; box-shadow:4px 4px 0px #000; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#ff0055; animation: beat 0.8s infinite alternate;">♥</span>
-              <div>
-                <div style="font-size:8px; font-weight:900;">TEMP</div>
-                <div style="font-size:14px; font-weight:900;">${tempVal.toFixed(1)}C</div>
-              </div>
-            </div>
-            <div style="background:#fff; border:4px solid #000; box-shadow:4px 4px 0px #000; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#00a2ff;">♦</span>
-              <div>
-                <div style="font-size:8px; font-weight:900;">HUMID</div>
-                <div style="font-size:14px; font-weight:900;">${humVal}%</div>
-              </div>
-            </div>
-            <div style="background:#fff; border:4px solid #000; box-shadow:4px 4px 0px #000; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#00ff55;">♣</span>
-              <div>
-                <div style="font-size:8px; font-weight:900;">CO2</div>
-                <div style="font-size:14px; font-weight:900;">${co2Val}</div>
-              </div>
-            </div>
-            <div style="background:#fff; border:4px solid #000; box-shadow:4px 4px 0px #000; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#ff00ff;">♠</span>
-              <div>
-                <div style="font-size:8px; font-weight:900;">PM2.5</div>
-                <div style="font-size:14px; font-weight:900;">${pmVal.toFixed(1)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 3. Retro Arcade Dark
-      document.getElementById('w-arcade-dark').innerHTML = `
-        <div style="background:#0c0728; border:4px solid #00f6ff; image-rendering:pixelated; padding:24px; color:#00f6ff; font-family:'Courier New', monospace; box-shadow:8px 8px 0px #ff007f; position:relative; overflow:hidden;">
-          <style>
-            @keyframes beat { 0% { transform: scale(1); } 100% { transform: scale(1.2); } }
-          </style>
-          <div style="font-size:14px; font-weight:900; border-bottom:4px solid #ff007f; padding-bottom:8px; margin-bottom:20px; text-align:center; text-transform:uppercase; letter-spacing:1px; color:#ff007f; text-shadow:0 0 5px #ff007f;">
-            ♥ AIR MONITOR ♥
-          </div>
-          
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <div style="width:120px; height:120px; border:4px solid #ff007f; background:#120b38; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:4px 4px 0px #00f6ff; position:relative;">
-              <span style="font-size:42px; font-weight:900; line-height:1; color:#fff; text-shadow:0 0 10px #fff;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; font-weight:900; text-transform:uppercase; margin-top:8px; background:#ff007f; color:#fff; padding:2px 6px; border:2px solid #00f6ff; text-shadow:none;">${gradeLabel}</span>
-            </div>
-          </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:#120b38; border:4px solid #00f6ff; box-shadow:4px 4px 0px #ff007f; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#ff007f; animation: beat 0.8s infinite alternate; text-shadow:0 0 5px #ff007f;">♥</span>
-              <div>
-                <div style="font-size:8px; font-weight:900; color:#ff007f;">TEMP</div>
-                <div style="font-size:14px; font-weight:900; color:#fff;">${tempVal.toFixed(1)}C</div>
-              </div>
-            </div>
-            <div style="background:#120b38; border:4px solid #00f6ff; box-shadow:4px 4px 0px #ff007f; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#00f6ff; animation: beat 0.8s infinite alternate-reverse; text-shadow:0 0 5px #00f6ff;">♦</span>
-              <div>
-                <div style="font-size:8px; font-weight:900; color:#00f6ff;">HUMID</div>
-                <div style="font-size:14px; font-weight:900; color:#fff;">${humVal}%</div>
-              </div>
-            </div>
-            <div style="background:#120b38; border:4px solid #00f6ff; box-shadow:4px 4px 0px #ff007f; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#00ff55; text-shadow:0 0 5px #00ff55;">♣</span>
-              <div>
-                <div style="font-size:8px; font-weight:900; color:#00ff55;">CO2</div>
-                <div style="font-size:14px; font-weight:900; color:#fff;">${co2Val}</div>
-              </div>
-            </div>
-            <div style="background:#120b38; border:4px solid #00f6ff; box-shadow:4px 4px 0px #ff007f; padding:10px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px; color:#ff00ff; text-shadow:0 0 5px #ff00ff;">♠</span>
-              <div>
-                <div style="font-size:8px; font-weight:900; color:#ff00ff;">PM2.5</div>
-                <div style="font-size:14px; font-weight:900; color:#fff;">${pmVal.toFixed(1)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 4. Industrial Metal Light
-      document.getElementById('w-metal-light').innerHTML = `
-        <div style="background:linear-gradient(135deg, #d8dcdb, #b5b9b8); border:1px solid #7a7e7d; border-radius:12px; padding:24px; color:#2c302f; font-family:-apple-system, sans-serif; box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), 0 8px 24px rgba(0,0,0,0.15); position:relative;">
-          <!-- Corner screw heads simulating an industrial plate -->
-          <div style="position:absolute; top:8px; left:8px; width:6px; height:6px; background:#7a7e7d; border-radius:50%; border:1px solid #5a5e5d; box-shadow:inset 0 1px 1px rgba(0,0,0,0.3);"></div>
-          <div style="position:absolute; top:8px; right:8px; width:6px; height:6px; background:#7a7e7d; border-radius:50%; border:1px solid #5a5e5d; box-shadow:inset 0 1px 1px rgba(0,0,0,0.3);"></div>
-          <div style="position:absolute; bottom:8px; left:8px; width:6px; height:6px; background:#7a7e7d; border-radius:50%; border:1px solid #5a5e5d; box-shadow:inset 0 1px 1px rgba(0,0,0,0.3);"></div>
-          <div style="position:absolute; bottom:8px; right:8px; width:6px; height:6px; background:#7a7e7d; border-radius:50%; border:1px solid #5a5e5d; box-shadow:inset 0 1px 1px rgba(0,0,0,0.3);"></div>
-          
-          <div style="font-size:13px; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:1px; margin-bottom:20px; opacity:0.8;">SYS // TEMP_CONTROL</div>
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <!-- Circular physical dial -->
-            <div style="
-              width:124px; height:124px; border-radius:50%;
-              background:radial-gradient(circle, #f0f3f2 0%, #b8bcbb 100%);
-              border:2px solid #7a7e7d;
-              box-shadow: 0 4px 10px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.6);
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-            ">
-              <span style="font-size:36px; font-weight:700; font-family:'Helvetica Neue', sans-serif; text-shadow:0 1px 0 #fff; color:#2c302f;">${grade.toFixed(1)}</span>
-              <span style="font-size:8px; font-weight:800; text-transform:uppercase; color:#fff; background:#2c302f; padding:1px 5px; border-radius:3px; margin-top:4px;">${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:#ccd0cf; border:1px solid #9aa09f; border-radius:6px; padding:10px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.1); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7;">TEMP</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#ccd0cf; border:1px solid #9aa09f; border-radius:6px; padding:10px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.1); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7;">HUMID</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${humVal}%</div>
-            </div>
-            <div style="background:#ccd0cf; border:1px solid #9aa09f; border-radius:6px; padding:10px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.1); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7;">CO2</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${co2Val} ppm</div>
-            </div>
-            <div style="background:#ccd0cf; border:1px solid #9aa09f; border-radius:6px; padding:10px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.1); display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7;">PM2.5</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 4. Industrial Steel Dark
-      document.getElementById('w-metal-dark').innerHTML = `
-        <div style="background:linear-gradient(135deg, #2d3035, #15171a); border:1px solid #484d54; border-radius:12px; padding:24px; color:#cdd4dd; font-family:-apple-system, sans-serif; box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 24px rgba(0,0,0,0.4); position:relative;">
-          <!-- Corner screw heads simulating an industrial plate -->
-          <div style="position:absolute; top:8px; left:8px; width:6px; height:6px; background:#484d54; border-radius:50%; border:1px solid #15171a; box-shadow:inset 0 1px 1px rgba(0,0,0,0.5);"></div>
-          <div style="position:absolute; top:8px; right:8px; width:6px; height:6px; background:#484d54; border-radius:50%; border:1px solid #15171a; box-shadow:inset 0 1px 1px rgba(0,0,0,0.5);"></div>
-          <div style="position:absolute; bottom:8px; left:8px; width:6px; height:6px; background:#484d54; border-radius:50%; border:1px solid #15171a; box-shadow:inset 0 1px 1px rgba(0,0,0,0.5);"></div>
-          <div style="position:absolute; bottom:8px; right:8px; width:6px; height:6px; background:#484d54; border-radius:50%; border:1px solid #15171a; box-shadow:inset 0 1px 1px rgba(0,0,0,0.5);"></div>
-          
-          <div style="font-size:13px; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:1px; margin-bottom:20px; opacity:0.8; color:#ff8d00; text-shadow:0 0 5px rgba(255,141,0,0.2);">SYS // TEMP_CONTROL</div>
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <!-- Circular physical dial with vacuum tube glow -->
-            <div style="
-              width:124px; height:124px; border-radius:50%;
-              background:radial-gradient(circle, #25282c 0%, #15171a 100%);
-              border:2px solid #ff8d00;
-              box-shadow: 0 0 15px rgba(255,141,0,0.3), inset 0 2px 4px rgba(0,0,0,0.5);
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-            ">
-              <span style="font-size:36px; font-weight:700; font-family:'Helvetica Neue', sans-serif; color:#ff8d00; text-shadow:0 0 8px rgba(255,141,0,0.5);">${grade.toFixed(1)}</span>
-              <span style="font-size:8px; font-weight:800; text-transform:uppercase; color:#15171a; background:#ff8d00; padding:1px 5px; border-radius:3px; margin-top:4px; font-weight:bold; box-shadow:0 0 4px #ff8d00;">${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:#1d2024; border:1px solid #484d54; border-radius:6px; padding:10px; display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7; color:#ff8d00;">TEMP</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#1d2024; border:1px solid #484d54; border-radius:6px; padding:10px; display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7; color:#ff8d00;">HUMID</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${humVal}%</div>
-            </div>
-            <div style="background:#1d2024; border:1px solid #484d54; border-radius:6px; padding:10px; display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7; color:#ff8d00;">CO2</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${co2Val} ppm</div>
-            </div>
-            <div style="background:#1d2024; border:1px solid #484d54; border-radius:6px; padding:10px; display:flex; flex-direction:column; align-items:center;">
-              <span style="font-size:9px; font-weight:700; opacity:0.7; color:#ff8d00;">PM2.5</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 5. Glassmorphism Pro Light (Liquid Aurora background overlay)
-      document.getElementById('w-glass-light').innerHTML = `
-        <div style="
-          border-radius:24px; padding:24px; color:#1c1f26; border:1px solid rgba(255,255,255,0.4);
-          background:rgba(255,255,255,0.4); backdrop-filter:blur(20px) saturate(150%);
-          position:relative; overflow:hidden;
-          box-shadow:0 8px 32px rgba(0,0,0,0.05);
-        ">
-          <!-- Colorful moving fluid aurora layer in the background -->
-          <div style="
-            position:absolute; top:-50%; left:-50%; width:200%; height:200%;
-            background: linear-gradient(135deg, #ffb7b2, #ffdac1, #e2f0cb, #b5ead7, #c7ceea);
-            background-size: 400% 400%;
-            animation: aurora-bg 8s ease infinite;
-            z-index:-1; opacity:0.55;
-          "></div>
-          
-          <div style="font-size:16px; font-weight:700; text-align:center; margin-bottom:20px; letter-spacing:0.5px; opacity:0.8;">Wohnzimmer</div>
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <div style="
-              width:120px; height:120px; border-radius:50%;
-              background:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.5);
-              box-shadow: 0 4px 15px rgba(0,0,0,0.03), inset 0 2px 4px rgba(255,255,255,0.8);
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-            ">
-              <span style="font-size:38px; font-weight:800; line-height:1;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; font-weight:700; text-transform:uppercase; margin-top:6px; color:${gradeColorStr};">● ${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.3); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7;">Temperatur</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.3); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7;">Feuchtigkeit</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${humVal}%</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.3); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7;">CO₂</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${co2Val} ppm</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.3); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7;">PM2.5 Staub</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 5. Glassmorphism Pro Dark (Cosmic Liquid Aurora background overlay)
-      document.getElementById('w-glass-dark').innerHTML = `
-        <div style="
-          border-radius:24px; padding:24px; color:#edf2f7; border:1px solid rgba(255,255,255,0.08);
-          background:rgba(18,21,28,0.55); backdrop-filter:blur(20px) saturate(150%);
-          position:relative; overflow:hidden;
-          box-shadow:0 8px 32px rgba(0,0,0,0.3);
-        ">
-          <!-- Colorful moving fluid aurora layer in the background -->
-          <div style="
-            position:absolute; top:-50%; left:-50%; width:200%; height:200%;
-            background: linear-gradient(135deg, #7b2cbf, #3c096c, #240046, #03001e, #7303c0, #ec38bc);
-            background-size: 400% 400%;
-            animation: aurora-bg 8s ease infinite;
-            z-index:-1; opacity:0.65;
-          "></div>
-          
-          <div style="font-size:16px; font-weight:700; text-align:center; margin-bottom:20px; letter-spacing:0.5px; opacity:0.8;">Wohnzimmer</div>
-          <div style="display:flex; justify-content:center; margin-bottom:24px;">
-            <div style="
-              width:120px; height:120px; border-radius:50%;
-              background:rgba(18,21,28,0.7); border:1px solid rgba(255,255,255,0.1);
-              box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.05);
-              display:flex; flex-direction:column; align-items:center; justify-content:center;
-            ">
-              <span style="font-size:38px; font-weight:800; line-height:1; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.3);">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; font-weight:700; text-transform:uppercase; margin-top:6px; color:${gradeColorStr};">● ${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7; color:#a0aec0;">Temperatur</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7; color:#a0aec0;">Feuchtigkeit</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${humVal}%</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7; color:#a0aec0;">CO₂</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${co2Val} ppm</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; backdrop-filter:blur(5px);">
-              <span style="font-size:10px; font-weight:600; opacity:0.7; color:#a0aec0;">PM2.5 Staub</span>
-              <div style="font-size:16px; font-weight:700; margin-top:4px; color:#fff;">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 6. De Stijl Light
-      const statusColorMap = {
-        'Optimal': '#1d3557', // Blue
-        'Gut': '#1d3557',
-        'Mäßig': '#ffb703', // Yellow
-        'Schlecht': '#e63946' // Red
-      };
-      
-      document.getElementById('w-stijl-light').innerHTML = `
-        <div style="background:#f7f6f2; border:4px solid #000; padding:24px; color:#000; font-family:'Helvetica Neue', Arial, sans-serif; box-shadow:8px 8px 0px rgba(0,0,0,0.15);">
-          <div style="font-size:18px; font-weight:900; letter-spacing:1px; text-transform:uppercase; border-bottom:4px solid #000; padding-bottom:10px; margin-bottom:20px;">
-            Wohnzimmer // De Stijl
-          </div>
-          <div style="display:flex; gap:16px; margin-bottom:16px;">
-            <div style="width:130px; height:130px; border:4px solid #000; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;">
-              <span style="font-size:42px; font-weight:900; letter-spacing:-1px;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; text-transform:uppercase; font-weight:900; letter-spacing:1px; margin-top:4px;">INDEX</span>
-            </div>
-            <!-- Large Mondrian color panel representing overall grade status -->
-            <div style="flex:1; border:4px solid #000; background:${statusColorMap[gradeLabel] || '#fff'}; min-height:100px; display:flex; align-items:center; justify-content:center; padding:12px;">
-              <span style="font-size:16px; font-weight:900; text-transform:uppercase; color:#fff; text-shadow:2px 2px 0px #000; letter-spacing:1.5px;">${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; background:#000; border:4px solid #000;">
-            <div style="background:#fff; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#555;">TEMPERATUR</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMap[tStat.text] || '#000'}">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#fff; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#555;">FEUCHTIGKEIT</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMap[hStat.text] || '#000'}">${humVal}%</div>
-            </div>
-            <div style="background:#fff; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#555;">CO2 GEHALT</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMap[cStat.text] || '#000'}">${co2Val} ppm</div>
-            </div>
-            <div style="background:#fff; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#555;">FEINSTAUB</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMap[pStat.text] || '#000'}">${pmVal.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 6. De Stijl Dark
-      const statusColorMapDark = {
-        'Optimal': '#3b82f6', // Neon Blue
-        'Gut': '#3b82f6',
-        'Mäßig': '#fbbf24', // Neon Yellow
-        'Schlecht': '#ef4444' // Neon Red
-      };
-      
-      document.getElementById('w-stijl-dark').innerHTML = `
-        <div style="background:#121212; border:4px solid #fff; padding:24px; color:#fff; font-family:'Helvetica Neue', Arial, sans-serif; box-shadow:8px 8px 0px rgba(255,255,255,0.15);">
-          <div style="font-size:18px; font-weight:900; letter-spacing:1px; text-transform:uppercase; border-bottom:4px solid #fff; padding-bottom:10px; margin-bottom:20px; color:#fff;">
-            Wohnzimmer // De Stijl
-          </div>
-          <div style="display:flex; gap:16px; margin-bottom:16px;">
-            <div style="width:130px; height:130px; border:4px solid #fff; background:#1e1e1e; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;">
-              <span style="font-size:42px; font-weight:900; letter-spacing:-1px; color:#fff;">${grade.toFixed(1)}</span>
-              <span style="font-size:9px; text-transform:uppercase; font-weight:900; letter-spacing:1px; margin-top:4px; color:#aaa;">INDEX</span>
-            </div>
-            <!-- Large Mondrian color panel representing overall grade status -->
-            <div style="flex:1; border:4px solid #fff; background:${statusColorMapDark[gradeLabel] || '#1e1e1e'}; min-height:100px; display:flex; align-items:center; justify-content:center; padding:12px;">
-              <span style="font-size:16px; font-weight:900; text-transform:uppercase; color:#fff; text-shadow:2px 2px 0px #000; letter-spacing:1.5px;">${gradeLabel}</span>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; background:#fff; border:4px solid #fff;">
-            <div style="background:#121212; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#aaa;">TEMPERATUR</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMapDark[tStat.text] || '#fff'}">${tempVal.toFixed(1)}°C</div>
-            </div>
-            <div style="background:#121212; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#aaa;">FEUCHTIGKEIT</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMapDark[hStat.text] || '#fff'}">${humVal}%</div>
-            </div>
-            <div style="background:#121212; padding:12px; display:flex; flex-direction:column; gap:4px;">
-              <span style="font-size:8px; font-weight:900; color:#aaa;">CO2 GEHALT</span>
-              <div style="font-size:15px; font-weight:900; color:${statusColorMapDark[cStat.text] || '#fff'}">${co2Val} ppm</div>
-            </div>
-            <div style="background:#121212; padding:12px; display:flex; align-items:center; justify-content:space-between; gap:4px;">
-              <div>
-                <span style="font-size:8px; font-weight:900; color:#aaa; display:block;">FEINSTAUB</span>
-                <span style="font-size:15px; font-weight:900; color:${statusColorMapDark[pStat.text] || '#fff'}">${pmVal.toFixed(1)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      cardVariants.forEach(variant => {
+        const card = document.getElementById(variant.id);
+        if (card) {
+          card.setConfig({
+            name: "Wohnzimmer",
+            card_style: variant.style,
+            theme_mode: variant.theme,
+            glass_effect: false,
+            temp_entity: "sensor.temp",
+            humidity_entity: "sensor.hum",
+            co2_entity: "sensor.co2",
+            pm25_entity: "sensor.pm25"
+          });
+          card.hass = {
+            states: {
+              "sensor.temp": { state: tempVal.toString(), attributes: { device_class: "temperature", unit_of_measurement: "°C" } },
+              "sensor.hum": { state: humVal.toString(), attributes: { device_class: "humidity", unit_of_measurement: "%" } },
+              "sensor.co2": { state: co2Val.toString(), attributes: { device_class: "carbon_dioxide", unit_of_measurement: "ppm" } },
+              "sensor.pm25": { state: pmVal.toString(), attributes: { device_class: "pm25", unit_of_measurement: "µg/m³" } }
+            }
+          };
+        }
+      });
     }
 
     const sliders = ['slider-temp', 'slider-hum', 'slider-co2', 'slider-pm25'];
@@ -896,6 +325,7 @@
       document.getElementById(id).addEventListener('input', updateAll);
     });
 
+    // Initialize
     updateAll();
   </script>
 </body>

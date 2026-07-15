@@ -80,7 +80,7 @@ Ein Klick auf die Note (nur bei `grade_entity`) oder eine Metrik öffnet den Hom
 
 ### Design-Stile
 
-Seit v0.7.0-beta.5 kann zwischen **zwölf unterschiedlichen Design-Richtungen** gewählt werden:
+Seit v0.7.0-beta.6 kann zwischen **18 unterschiedlichen Design-Richtungen** gewählt werden:
 - **Klassisch (Original)**: Das ursprüngliche, moderne Design mit dem kreisrunden, animierten, leuchtenden Gradient-Blob und Kacheln in einem schlichten Box-Look.
 - **Nordic Minimal / Organic**: Ein gemütlicher, skandinavisch inspirierter Look. Er zeichnet sich aus durch eine organisch geschwungene, fließende Blob-Form, Serif-Typografie und Kacheln als weiche, leicht abgesetzte Karten.
 - **Neo-Brutalism (Retro)**: Ein markanter Vibe mit dicken Konturen (3px), harten Schatten, Monospace-Schrift und kontrastreichen Farb-Pops.
@@ -93,6 +93,12 @@ Seit v0.7.0-beta.5 kann zwischen **zwölf unterschiedlichen Design-Richtungen** 
 - **Industrial Metal (Skeuomorphisch)**: Realistische, gebürstete Metall- oder Titanfrontplatte mit angedeuteten Schrauben und Nixie-Röhren-Glimmen im Dark Mode.
 - **Liquid Aurora (Mobiles Glas)**: Weich fließende Farbauren, die sich im Hintergrund unter einer satinierten Milchglasscheibe langsam bewegen.
 - **De Stijl / Mondrian**: Bauhaus-Ästhetik nach Piet Mondrian mit dicken schwarzen Gitterlinien und asymmetrisch eingefärbten Flächen für Sensorzustände.
+- **Bauhaus Poster (Geometrisch)**: Reduzierter Bauhaus-Look mit Primärfarben, asymmetrischen Rahmen und schwerer serifenloser Typografie auf beigem/anthrazitem Grund.
+- **Solarized Terminal (Coder)**: Terminal-Look mit Monospace-Schrift, Systemkommandos (`$ cat /temp`) und augenschonender Solarized-Farbpalette.
+- **Claymorphism (Soft 3D)**: Plastischer Clay-Look mit Doppel-Schatten und weich abgerundeten Kacheln, die wie geformte Knetmasse wirken.
+- **Biophilic Leaf (Organisch)**: Erdiger Natur-Vibe mit asymmetrischen Blattecken (28px/12px), Serifenschrift und ruhigen waldgrünen Akzentfarben.
+- **Vaporwave Grid (Synthwave)**: 80er-Retro-Look mit neonpinken und cyanblauen Konturen, doppelten Linien, Gitter-Vibe und leuchtenden Neonschatten.
+- **Monolith (Industrial LED)**: Brutalistischer Industrie-Look mit 0px Eckenrundung, dunkler Rasterung und LED-Segment-Anzeige der Sensorwerte.
 
 <details>
 <summary>📸 <b>Vorschau aller Design-Stile anzeigen (hier klicken)</b></summary>
@@ -137,6 +143,36 @@ Seit v0.7.0-beta.5 kann zwischen **zwölf unterschiedlichen Design-Richtungen** 
 | --- |
 | ![Japandi Light](images/japandi_light.jpg) |
 
+### 9. Bauhaus Poster (Geometrisch)
+| Bauhaus Poster Light | Bauhaus Poster Dark |
+| --- | --- |
+| ![Bauhaus Poster Light](images/bauhaus_light.jpg) | ![Bauhaus Poster Dark](images/bauhaus_dark.jpg) |
+
+### 10. Solarized Terminal (Coder)
+| Solarized Terminal Light | Solarized Terminal Dark |
+| --- | --- |
+| ![Solarized Terminal Light](images/solar_light.jpg) | ![Solarized Terminal Dark](images/solar_dark.jpg) |
+
+### 11. Claymorphism (Soft 3D)
+| Claymorphism Light | Claymorphism Dark |
+| --- | --- |
+| ![Claymorphism Light](images/clay_light.jpg) | ![Claymorphism Dark](images/clay_dark.jpg) |
+
+### 12. Biophilic Leaf (Organisch)
+| Biophilic Leaf Light | Biophilic Leaf Dark |
+| --- | --- |
+| ![Biophilic Leaf Light](images/organic_light.jpg) | ![Biophilic Leaf Dark](images/organic_dark.jpg) |
+
+### 13. Vaporwave Grid (Synthwave)
+| Vaporwave Grid Light | Vaporwave Grid Dark |
+| --- | --- |
+| ![Vaporwave Grid Light](images/vapor_light.jpg) | ![Vaporwave Grid Dark](images/vapor_dark.jpg) |
+
+### 14. Monolith (Industrial LED)
+| Monolith Light | Monolith Dark |
+| --- | --- |
+| ![Monolith Light](images/monolith_light.jpg) | ![Monolith Dark](images/monolith_dark.jpg) |
+
 *(Die weiteren Designs Retro Arcade, Industrial Metal, Liquid Aurora und De Stijl können interaktiv in der [preview.html](preview.html) ausprobiert werden.)*
 
 </details>
@@ -180,6 +216,16 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 - [WHO Guidelines for Indoor Air Quality – Dampness and Mould (NCBI Bookshelf)](https://www.ncbi.nlm.nih.gov/books/NBK143941/)
 
 ## Changelog
+
+### v0.7.0-beta.6
+- 🎨 **6 neue Design-Stile** in Light & Dark Mode:
+  * **Bauhaus Poster (bauhaus)**: Geometrische Primärfarben auf Papier-Hintergrund, asymmetrische Linien und schwere Grotesk-Zahlen.
+  * **Solarized Terminal (solar)**: Programmierer-Vibe im Solarized-Farbschema mit Monospace-Schrift und `$ cat`-Terminal-Befehlen.
+  * **Claymorphism (clay)**: Plastischer 3D-Look mit inneren Doppel-Schatten und weich abgerundeten Metrik-Kacheln.
+  * **Biophilic Leaf (organic)**: Organische Blattformen mit asymmetrischen Ecken, Serifenschrift und erdiger waldgrüner Akzentuierung.
+  * **Vaporwave Grid (vapor)**: 80er Synthwave-Ästhetik mit neonpinken und cyanblauen Konturen, doppelten Linien und Leucht-Effekten.
+  * **Monolith (monolith)**: Minimalistisch-industrieller Look mit scharfen Kanten (0px Eckenrundung) und Segment-LED-Anzeige.
+- 💻 **Interaktiver Playground überarbeitet**: `preview.html` nutzt nun die echten, unkompilierten Web Components `<luftqualitaet-card>` anstelle statischer HTML-Dummies.
 
 ### v0.6.0
 - 🚀 **Kachel-Animationen & Ambient-Effekte**:
