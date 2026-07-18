@@ -218,6 +218,10 @@ Die Schwellenwerte pro Metrik orientieren sich an anerkannten Gesundheits-/Bauri
 
 ## Changelog
 
+### v0.7.0-beta.7
+- 🔧 **Quellcode restrukturiert**: Die bisher als einzelne 3000-Zeilen-Datei gepflegte Karte ist jetzt in Module unter `src/` aufgeteilt — ein Modul pro Design-Stil (`src/styles/`), dazu Karte, Editor, Validierung und Defaults. `scripts/build.js` (reine Konkatenation, keine Dependencies, kein Bundler) erzeugt daraus ein byte-identisches `dist/airquality-card.js`. **Keine funktionale Änderung** — die ausgelieferte Datei bleibt ein einzelnes, direkt ladbares Browser-Skript.
+- ✅ **CI abgesichert**: Der Validate-Workflow baut jetzt aus `src/` und schlägt fehl, wenn das eingecheckte `dist/` nicht zum Quellcode passt. `npm test` baut vor dem Testlauf automatisch neu.
+
 ### v0.7.0-beta.6
 - 🎨 **6 neue Design-Stile** in Light & Dark Mode:
   * **Bauhaus Poster (bauhaus)**: Geometrische Primärfarben auf Papier-Hintergrund, asymmetrische Linien und schwere Grotesk-Zahlen.
