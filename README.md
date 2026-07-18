@@ -23,11 +23,12 @@ Ursprünglich als Inline-Dashboard-Ressource entwickelt und mehrfach (pro Raum e
 
 ## Entwicklung
 
-Die Karte selbst hat weiterhin keinen Build-Schritt (`dist/airquality-card.js` wird direkt bearbeitet und ausgeliefert). Für die Testsuite gibt es eine einzige Dev-Dependency (`jsdom`), die Tests laufen mit Node's eingebautem Test-Runner:
+Der Quellcode liegt in `src/` (ein Modul pro Design-Stil unter `src/styles/`, dazu `card.js`, `editor.js`, `validation.js`, `defaults.js`). `scripts/build.js` fügt die Module per einfacher Konkatenation zu `dist/airquality-card.js` zusammen — kein Bundler, keine Transformation, die ausgelieferte Datei bleibt ein einzelnes, direkt im Browser ladbares Skript ohne Laufzeit-Dependencies. Für die Testsuite gibt es eine einzige Dev-Dependency (`jsdom`), die Tests laufen mit Node's eingebautem Test-Runner:
 
 ```bash
 npm install
-npm test
+npm run build   # src/ -> dist/airquality-card.js
+npm test        # baut automatisch neu und führt die Tests aus
 ```
 
 Die Tests laden `dist/airquality-card.js` als echtes `<script>` in eine jsdom-Umgebung (genau wie Home Assistant es über die Lovelace-Ressource tut) und decken ab: die Notenberechnung inkl. WHO-Schwellenwerte, den gleitenden PM2.5-Mittelwert (inkl. Caching/Fallback-Verhalten), die Sensor-Plausibilitätsprüfung, das Rendering (Hinweis-/Fehler-/Hauptkartenpfade, Hell/Dunkel/Glass-Darstellung) sowie die Area-Autofill-Logik des Editors (Geräte-Gruppierung, Schlafzimmer-Erkennung, Schutz vor Überschreiben manueller Eingaben).

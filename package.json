@@ -1,9 +1,10 @@
 {
   "name": "ha-airquality-card",
   "private": true,
-  "description": "Test tooling for the Air Quality Card (the shipped card itself has no build step)",
+  "description": "Air Quality Card für Home Assistant — Build- und Test-Tooling (die ausgelieferte Karte in dist/ bleibt ein einzelnes, direkt ladbares Skript ohne Laufzeit-Dependencies)",
   "scripts": {
-    "test": "node --test"
+    "build": "node scripts/build.js",
+    "test": "npm run build && node --test"
   },
   "devDependencies": {
     "jsdom": "^25.0.1"
